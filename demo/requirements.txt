@@ -1,0 +1,15 @@
+# Web 框架
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20      # 文件上传
+
+# 数据结构与计算
+pydantic==2.13.4
+pandas==3.0.5
+
+# 配置
+python-dotenv==1.0.1
+
+# LLM 供应商 SDK
+anthropic==0.121.0            # Claude，使用原生 structured output
+# openai==1.59.6              # 如改用 DeepSeek / 智谱 / 通义 等兼容接口再取消注释

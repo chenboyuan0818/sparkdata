@@ -1,0 +1,138 @@
+# =============================================================================
+# 指标口径字典 —— 校验闸③ 的白名单依据
+# =============================================================================
+# 为什么把口径抽成独立文件而不是塞进 Prompt：
+#
+#   1. 企业内部最容易吵架的就是口径 —— "转化率"到底除以进入人数还是点击人数，
+#      两个部门能吵一整年。把口径显式写死并独立治理，从源头消灭这类争议。
+#   2. LLM 只能【引用】而不能【发明】指标。生成时把本字典注入 Prompt，
+#      生成后用它做白名单校验，双向约束。
+#   3. 口径变更时（如平台改了 GMV 定义），只需改这一处，
+#      并可反查出所有引用该指标的 Skill，标记为"待复核"。
+#
+# healthy_range 是专家经验的一部分 —— 没有阈值的分析只能说"下降了 12%"，
+# 有阈值才能说"已超出正常波动范围，需要介入"。
+# =============================================================================
+
+电商运营:
+  进入率:
+    formula: 进入直播间人数 / 曝光人数
+    unit: "%"
+    healthy_range: [0.05, 0.20]
+    description: 衡量封面、标题、开场对流量的承接能力
+
+  商品点击率:
+    formula: 商品点击人数 / 进入直播间人数
+    unit: "%"
+    healthy_range: [0.10, 0.35]
+    description: 衡量选品吸引力与讲解引导效果
+
+  成交转化率:
+    formula: 成交订单数 / 商品点击人数
+    unit: "%"
+    healthy_range: [0.08, 0.25]
+    description: 点击成交率。注意本口径非全场转化率，切勿混用
+
+  UV价值:
+    formula: GMV / 进入直播间人数
+    unit: 元
+    healthy_range: [1.0, 10.0]
+    description: 单个进入用户带来的成交金额，直播间综合效率的核心指标
+
+  客单价:
+    formula: GMV / 成交订单数
+    unit: 元
+    description: 单笔订单的平均成交金额
+
+  平均停留时长:
+    formula: mean(停留时长)
+    unit: 秒
+    healthy_range: [45, 300]
+    description: 内容留人能力，低于 45 秒通常说明开场或话术有问题
+
+  退货率:
+    formula: 退货订单数 / 成交订单数
+    unit: "%"
+    healthy_range: [0.0, 0.15]
+    description: 反映商品描述与实物的一致性、以及选品质量
+
+销售经营:
+  线索转商机率:
+    formula: 新增商机数 / 线索总数
+    unit: "%"
+    healthy_range: [0.15, 0.40]
+    description: 衡量线索质量与销售首响效率
+
+  赢单率:
+    formula: 赢单数 / 已关闭商机数
+    unit: "%"
+    healthy_range: [0.20, 0.45]
+    description: 已关闭商机中成功签约的比例，不含仍在跟进的商机
+
+  平均销售周期:
+    formula: mean(days_between(商机关闭日期, 商机创建日期))
+    unit: 天
+    description: 从商机创建到关闭的平均天数，被拉长通常预示客户预算或决策链变化
+
+  人均产能:
+    formula: 总签约金额 / 销售人数
+    unit: 元
+    description: 注意大单会严重扭曲均值，建议同时看中位数
+
+  单均金额:
+    formula: 总签约金额 / 赢单数
+    unit: 元
+    description: 平均合同金额
+
+  目标达成率:
+    formula: 实际签约金额 / 目标金额
+    unit: "%"
+    healthy_range: [0.9, 1.5]
+    description: 相对业绩目标的完成情况
+
+用户增长:
+  次日留存率:
+    formula: 次日回访用户数 / 新增用户数
+    unit: "%"
+    healthy_range: [0.25, 0.60]
+    description: 最基础的留存信号，反映首日体验质量
+
+  七日留存率:
+    formula: 七日内回访用户数 / 新增用户数
+    unit: "%"
+    healthy_range: [0.10, 0.35]
+    description: 反映产品的中期价值验证
+
+  获客成本:
+    formula: 渠道总花费 / 新增用户数
+    unit: 元
+    description: CAC。需与 LTV 对照才有意义，单看无法判断好坏
+
+  激活率:
+    formula: 完成关键行为用户数 / 新增用户数
+    unit: "%"
+    healthy_range: [0.30, 0.70]
+    description: 关键行为的定义必须在 Skill 中显式说明
+
+零售门店:
+  坪效:
+    formula: 门店销售额 / 营业面积
+    unit: 元每平米
+    description: 单位面积产出，跨店对比的核心指标
+
+  进店转化率:
+    formula: 成交人数 / 进店人数
+    unit: "%"
+    healthy_range: [0.15, 0.45]
+    description: 衡量导购能力与货品匹配度
+
+  连带率:
+    formula: 销售件数 / 成交单数
+    unit: 件
+    healthy_range: [1.2, 3.0]
+    description: 平均每单购买件数，反映搭配销售能力
+
+  客流量:
+    formula: sum(进店人数)
+    unit: 人
+    description: 进店总人次

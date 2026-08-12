@@ -1,0 +1,9 @@
+# 场景：CSV 缺少必填字段 GMV。
+# 期望行为是【拦截执行】并说清楚缺什么、从哪导出，
+# 而不是照常跑出一份看起来像模像样、实则结论错误的报告
+name: 必填字段缺失（拦截样本）
+description: 缺少 GMV 列，应拒绝执行
+
+expect_blocked: true
+expected_missing_fields: [GMV]
+expected_hint_contains: 交易看板

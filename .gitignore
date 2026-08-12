@@ -1,0 +1,26 @@
+# ⚠️ 绝不能提交的：API Key
+.env
+*.env
+!.env.example
+!**/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# 运行时生成的数据
+demo/data/skills.db
+demo/data/evaluation_report.json
+demo/data/uploads/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+
+# 面试题原件属于对方公司的材料，不公开发布（本地保留）
+面试题.pdf

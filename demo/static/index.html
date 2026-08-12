@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>企业岗位经验 Skill 生成平台</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+  [x-cloak]{display:none!important}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  .md h1{font-size:1.5rem;font-weight:700;margin:1.2rem 0 .8rem}
+  .md h2{font-size:1.15rem;font-weight:600;margin:1.4rem 0 .6rem;padding-bottom:.35rem;border-bottom:1px solid #e2e8f0}
+  .md h3{font-size:1rem;font-weight:600;margin:1rem 0 .4rem}
+  .md p{margin:.5rem 0;line-height:1.75}
+  .md ul,.md ol{margin:.5rem 0 .5rem 1.4rem;line-height:1.8}
+  .md ul{list-style:disc}.md ol{list-style:decimal}
+  .md table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.875rem}
+  .md th,.md td{border:1px solid #e2e8f0;padding:.5rem .7rem;text-align:left}
+  .md th{background:#f8fafc;font-weight:600}
+  .md blockquote{border-left:3px solid #cbd5e1;padding-left:.9rem;color:#64748b;margin:.6rem 0}
+  .md code{background:#f1f5f9;padding:.1rem .35rem;border-radius:3px;font-size:.85em}
+  .md hr{margin:1.5rem 0;border-color:#e2e8f0}
+  .md strong{font-weight:600;color:#0f172a}
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800" x-data="app()" x-init="init()">
+
+<!-- ─────────────── 顶栏 ─────────────── -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center gap-6">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white grid place-items-center font-bold text-sm">S</div>
+      <div>
+        <h1 class="font-semibold text-[15px] leading-tight">企业岗位经验 Skill 生成平台</h1>
+        <p class="text-[11px] text-slate-500 leading-tight">把优秀员工的岗位经验，沉淀为可复用的 AI 员工能力</p>
+      </div>
+    </div>
+
+    <nav class="flex gap-1 ml-4">
+      <template x-for="t in tabs" :key="t.id">
+        <button @click="go(t.id)"
+          class="px-3.5 py-1.5 rounded-md text-[13px] font-medium transition"
+          :class="view===t.id ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'"
+          x-text="t.label"></button>
+      </template>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2 text-xs">
+      <template x-if="status.mock_mode">
+        <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200"
+              title="未配置 API Key：数值仍真实计算，文字分析为预置内容">
+          演示模式
+        </span>
+      </template>
+      <template x-if="!status.mock_mode">
+        <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span x-text="status.model"></span>
+        </span>
+      </template>
+    </div>
+  </div>
+</header>
+
+<!-- 连不上后端时的引导。最常见的原因是双击 HTML 文件打开，而不是访问服务地址 -->
+<div x-show="offline" x-cloak class="bg-rose-50 border-b border-rose-200">
+  <div class="max-w-7xl mx-auto px-6 py-3 text-[13px] text-rose-800">
+    <div class="font-medium mb-1">⚠️ 无法连接后端服务</div>
+    <div class="text-rose-700 leading-relaxed">
+      <template x-if="!servedOverHttp">
+        <span>
+          当前是以文件形式打开的（<code class="bg-white/60 px-1 rounded" x-text="location.protocol"></code>），
+          请改为在浏览器地址栏访问
+          <a href="http://localhost:8000" class="font-medium underline">http://localhost:8000</a>。
+        </span>
+      </template>
+      <template x-if="servedOverHttp">
+        <span>请确认服务已启动：<code class="bg-white/60 px-1 rounded">./.venv/bin/uvicorn app.main:app --port 8000</code></span>
+      </template>
+      <button @click="init()" class="ml-2 underline font-medium">重试</button>
+    </div>
+  </div>
+</div>
+
+<main class="max-w-7xl mx-auto px-6 py-6">
+
+<!-- ═══════════════ 视图一：资产库 ═══════════════ -->
+<section x-show="view==='library'" x-cloak>
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <template x-for="s in statCards" :key="s.label">
+      <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="text-[11px] text-slate-500 mb-1" x-text="s.label"></div>
+        <div class="text-2xl font-semibold" :class="s.cls || 'text-slate-800'" x-text="s.value"></div>
+      </div>
+    </template>
+  </div>
+
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="font-semibold">Skill 资产目录</h2>
+    <button @click="go('generate')" class="text-[13px] px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">
+      + 新建 Skill
+    </button>
+  </div>
+
+  <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <template x-for="s in skills" :key="s.skill_id">
+      <div @click="openSkill(s.skill_id)"
+           class="bg-white rounded-xl border border-slate-200 p-5 cursor-pointer hover:border-indigo-300 hover:shadow-sm transition">
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <h3 class="font-semibold text-[15px] leading-snug" x-text="s.name"></h3>
+          <span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border"
+                :class="s.status==='published'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-slate-100 text-slate-600 border-slate-200'"
+                x-text="s.status==='published' ? '已发布' : '草稿'"></span>
+        </div>
+        <p class="text-[13px] text-slate-500 leading-relaxed mb-3 line-clamp-2" x-text="s.description"></p>
+        <div class="flex flex-wrap gap-1.5 text-[11px]">
+          <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600" x-text="s.domain"></span>
+          <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700"
+                x-text="s.field_count + ' 个输入字段'"></span>
+          <span class="px-2 py-0.5 rounded bg-violet-50 text-violet-700"
+                x-text="'🔢 ' + s.metric_step_count + ' 计算 / 🧠 ' + s.llm_step_count + ' 推理'"></span>
+          <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-500"
+                x-text="'v' + s.version + (s.version_count>1 ? ' (' + s.version_count + ' 版)' : '')"></span>
+        </div>
+      </div>
+    </template>
+  </div>
+</section>
+
+<!-- ═══════════════ 视图二：生成 ═══════════════ -->
+<section x-show="view==='generate'" x-cloak class="max-w-4xl mx-auto">
+  <h2 class="font-semibold text-lg mb-1">用一句话创建 Skill</h2>
+  <p class="text-[13px] text-slate-500 mb-4">
+    描述你想让 AI 员工具备的岗位能力，系统会自动生成七个字段，并经过四道校验闸。
+  </p>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-5 mb-4">
+    <textarea x-model="genInput" rows="3" :disabled="generating"
+      class="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 disabled:bg-slate-50"
+      placeholder="例如：帮我创建一个抖音直播运营复盘 Skill"></textarea>
+
+    <div class="flex flex-wrap gap-1.5 mt-3">
+      <span class="text-[11px] text-slate-400 py-1">试试：</span>
+      <template x-for="e in examples" :key="e">
+        <button @click="genInput=e" :disabled="generating"
+          class="text-[11px] px-2.5 py-1 rounded-full border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-50"
+          x-text="e"></button>
+      </template>
+    </div>
+
+    <div class="flex items-center gap-3 mt-4">
+      <button @click="generate()" :disabled="generating || !genInput.trim()"
+        class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed">
+        <span x-text="generating ? '生成中…' : '生成 Skill'"></span>
+      </button>
+      <span x-show="generating" class="text-xs text-slate-500">
+        含四道校验闸，校验失败会带错误信息自动重试，通常 20~60 秒
+      </span>
+      <span x-show="status.mock_mode" class="text-xs text-amber-600">
+        演示模式下无法生成新 Skill，请先配置 API Key
+      </span>
+    </div>
+  </div>
+
+  <!-- 生成过程 -->
+  <div x-show="genResult" x-cloak class="space-y-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <h3 class="font-semibold text-sm mb-3">生成过程</h3>
+      <template x-for="a in (genResult?.attempts||[])" :key="a.attempt">
+        <div class="mb-2.5 last:mb-0">
+          <div class="flex items-center gap-2 text-[13px]">
+            <span x-text="a.ok ? '✅' : '❌'"></span>
+            <span x-text="'第 ' + a.attempt + ' 次尝试'"></span>
+            <span class="text-slate-400 text-xs" x-text="(a.duration_ms/1000).toFixed(1) + 's'"></span>
+          </div>
+          <template x-for="g in (a.validation?.gates||[])">
+            <div x-show="g.errors.length" class="ml-6 mt-1 text-xs text-rose-600">
+              <div x-text="'闸' + g.gate + ' ' + g.name + ' 未通过：'"></div>
+              <template x-for="e in g.errors.slice(0,3)">
+                <div class="ml-3 text-slate-500" x-text="'· ' + e"></div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+      <div x-show="genResult?.error" class="text-[13px] text-rose-600 mt-2" x-text="genResult?.error"></div>
+    </div>
+
+    <div x-show="genResult?.skill" class="flex gap-3">
+      <button @click="openSkill(genResult.skill.skill_id)"
+        class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+        查看生成的 Skill 配置 →
+      </button>
+    </div>
+
+    <!-- 自检 -->
+    <div x-show="genResult?.critique" class="bg-amber-50 rounded-xl border border-amber-200 p-5">
+      <h3 class="font-semibold text-sm mb-2 text-amber-900">模型自检意见</h3>
+      <p class="text-[11px] text-amber-700 mb-3">
+        四道校验闸只能抓结构问题。自检用来发现「语法合法但业务上讲不通」的语义错误——
+        它会误报，所以只作提示，不参与自动拦截。
+      </p>
+      <div class="md text-[13px] text-slate-700" x-html="md(genResult.critique)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 视图三：Skill 详情 ═══════════════ -->
+<section x-show="view==='detail' && skill" x-cloak>
+  <button @click="go('library')" class="text-[13px] text-slate-500 hover:text-indigo-600 mb-3">← 返回资产库</button>
+
+  <div class="flex items-start justify-between gap-4 mb-5">
+    <div>
+      <h2 class="text-xl font-semibold" x-text="skill?.name"></h2>
+      <p class="text-[13px] text-slate-500 mt-1 max-w-3xl" x-text="skill?.description"></p>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-xs px-2.5 py-1 rounded-full border"
+            :class="skill?.status==='published'
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-slate-100 text-slate-600 border-slate-200'"
+            x-text="(skill?.status==='published'?'已发布':'草稿') + ' v' + skill?.version"></span>
+      <button x-show="skill?.status!=='published'" @click="publish()"
+        class="text-[13px] px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">发布</button>
+    </div>
+  </div>
+
+  <!-- 四道校验闸 -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5 mb-4">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-semibold text-sm">四道校验闸</h3>
+      <span class="text-xs px-2 py-0.5 rounded-full"
+            :class="validation?.passed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'"
+            x-text="validation?.passed ? '全部通过' : validation?.error_count + ' 项错误'"></span>
+    </div>
+    <div class="grid md:grid-cols-4 gap-3">
+      <template x-for="g in (validation?.gates||[])" :key="g.gate">
+        <div class="rounded-lg border p-3"
+             :class="g.passed ? 'border-emerald-200 bg-emerald-50/40' : 'border-rose-200 bg-rose-50/40'">
+          <div class="flex items-center gap-1.5 text-[13px] font-medium mb-1">
+            <span x-text="g.passed ? '✅' : '❌'"></span>
+            <span x-text="'闸' + g.gate + ' ' + g.name"></span>
+          </div>
+          <div class="text-[11px] text-slate-500" x-text="g.errors.length + ' 错误 / ' + g.warnings.length + ' 告警'"></div>
+          <template x-for="e in g.errors">
+            <div class="text-[11px] text-rose-600 mt-1.5 leading-snug" x-text="e"></div>
+          </template>
+          <template x-for="w in g.warnings">
+            <div class="text-[11px] text-amber-600 mt-1.5 leading-snug" x-text="w"></div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-4">
+    <!-- 左：①②③ -->
+    <div class="space-y-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="font-semibold text-sm mb-3">③ 使用场景</h3>
+        <ul class="space-y-1.5">
+          <template x-for="u in (skill?.use_cases||[])">
+            <li class="text-[13px] text-slate-600 flex gap-2"><span class="text-indigo-400">·</span><span x-text="u"></span></li>
+          </template>
+        </ul>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="font-semibold text-sm mb-1">④ 输入数据定义</h3>
+        <p class="text-[11px] text-slate-400 mb-3">数据契约。必填字段缺失时会拦截执行，不允许带病运行。</p>
+        <div class="space-y-2.5">
+          <template x-for="f in (skill?.input_schema||[])" :key="f.name">
+            <div class="border border-slate-100 rounded-lg p-2.5">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[13px] font-medium" x-text="f.name"></span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500" x-text="f.type"></span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded"
+                      :class="f.required?'bg-rose-50 text-rose-600':'bg-slate-100 text-slate-500'"
+                      x-text="f.required?'必填':'选填'"></span>
+                <span x-show="f.unit" class="text-[10px] text-slate-400" x-text="f.unit"></span>
+              </div>
+              <div class="text-[11px] text-slate-500 leading-snug" x-text="'口径：' + f.description"></div>
+              <div class="text-[11px] text-slate-400 leading-snug mt-0.5" x-text="'来源：' + (f.source_hint||'未提供')"></div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5" x-show="Object.keys(skill?.metric_dictionary||{}).length">
+        <h3 class="font-semibold text-sm mb-1">指标口径字典</h3>
+        <p class="text-[11px] text-slate-400 mb-3">企业内部最容易吵架的地方，必须显式写死。</p>
+        <template x-for="(v,k) in (skill?.metric_dictionary||{})" :key="k">
+          <div class="mb-2 last:mb-0">
+            <div class="text-[13px] font-medium" x-text="k"></div>
+            <div class="text-[11px] text-slate-500 leading-snug" x-text="v"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- 右：⑤⑥⑦ -->
+    <div class="space-y-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="font-semibold text-sm mb-1">⑤ 分析流程</h3>
+        <p class="text-[11px] text-slate-400 mb-3">
+          🔢 计算步骤由确定性引擎执行；🧠 推理步骤只接收算好的指标，<strong>不接触原始数据</strong>。
+        </p>
+        <div class="space-y-3">
+          <template x-for="st in (skill?.analysis_flow||[])" :key="st.step_id">
+            <div class="border rounded-lg p-3"
+                 :class="st.type==='metric' ? 'border-blue-200 bg-blue-50/30' : 'border-violet-200 bg-violet-50/30'">
+              <div class="flex items-center gap-2 mb-1.5">
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-mono bg-white border border-slate-200" x-text="st.step_id"></span>
+                <span class="text-[11px] px-1.5 py-0.5 rounded"
+                      :class="st.type==='metric'?'bg-blue-100 text-blue-700':'bg-violet-100 text-violet-700'"
+                      x-text="st.type==='metric'?'🔢 确定性计算':'🧠 模型推理'"></span>
+                <span class="text-[13px] font-medium" x-text="st.name"></span>
+              </div>
+              <pre x-show="st.type==='metric'"
+                   class="text-[11px] bg-white/70 rounded p-2 overflow-x-auto text-slate-700 leading-relaxed"
+                   x-text="st.formula"></pre>
+              <div x-show="st.type==='llm'" class="text-[11px] text-slate-600 leading-relaxed whitespace-pre-wrap"
+                   x-text="st.instruction"></div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="font-semibold text-sm mb-3">⑥ Agent Prompt</h3>
+        <pre class="text-[11px] text-slate-600 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto"
+             x-text="skill?.agent_prompt"></pre>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="font-semibold text-sm mb-3">⑦ 输出结果模板</h3>
+        <pre class="text-[11px] text-slate-600 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto"
+             x-text="skill?.output_template"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 执行 -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5 mt-4">
+    <h3 class="font-semibold text-sm mb-1">调用 Skill 执行任务</h3>
+    <p class="text-[11px] text-slate-400 mb-4">
+      上传 CSV，系统按 input_schema 校验后执行。缺必填字段会明确拦截并告诉你缺什么、从哪导出。
+    </p>
+    <div class="flex flex-wrap items-center gap-3">
+      <input type="file" accept=".csv" @change="pickFile($event)"
+        class="text-[13px] file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:bg-slate-100 file:text-slate-700 file:text-[13px] hover:file:bg-slate-200">
+      <button @click="run()" :disabled="!file || running"
+        class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-40">
+        <span x-text="running ? '执行中…' : '执行'"></span>
+      </button>
+      <a :href="apiUrl('/api/skills/'+skill?.skill_id+'/sample')" download
+         class="text-[13px] text-indigo-600 hover:underline">下载示例数据</a>
+    </div>
+
+    <!-- 数据校验拦截 -->
+    <div x-show="runError" x-cloak class="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-4">
+      <div class="text-[13px] font-medium text-rose-800 mb-2" x-text="runError?.error"></div>
+      <template x-for="m in (runError?.detail?.missing_required||[])">
+        <div class="text-[12px] text-rose-700 mb-1.5">
+          <span class="font-medium" x-text="'· ' + m.name"></span>
+          <span class="text-rose-600" x-text="'（' + m.description + '）'"></span>
+          <div class="ml-3 text-[11px] text-rose-500" x-text="'导出位置：' + m.source_hint"></div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- 执行结果 -->
+  <div x-show="exec" x-cloak class="mt-4 grid lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6">
+      <div class="md" x-html="md(exec?.report_markdown||'')"></div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="font-semibold text-sm mb-1">数值溯源</h3>
+        <p class="text-[11px] text-slate-400 mb-3">
+          每个数字都可查到公式与依赖字段。<strong>可验算的结论才值得被信任。</strong>
+        </p>
+        <div class="space-y-1.5 max-h-96 overflow-y-auto">
+          <template x-for="(m,k) in (exec?.metrics||{})" :key="k">
+            <details class="border border-slate-100 rounded-lg">
+              <summary class="px-2.5 py-1.5 cursor-pointer text-[12px] flex justify-between items-center hover:bg-slate-50">
+                <span x-text="k"></span>
+                <span class="font-mono font-medium text-indigo-600" x-text="m.display"></span>
+              </summary>
+              <div class="px-2.5 pb-2 pt-1 text-[11px] text-slate-500 border-t border-slate-100 space-y-0.5">
+                <div><span class="text-slate-400">公式：</span><span class="font-mono" x-text="m.formula"></span></div>
+                <div><span class="text-slate-400">依赖：</span><span x-text="(m.depends_on||[]).join('、')||'（常量）'"></span></div>
+                <div><span class="text-slate-400">数据：</span><span x-text="m.row_count + ' 行'"></span></div>
+                <div x-show="m.warning" class="text-amber-600" x-text="m.warning"></div>
+              </div>
+            </details>
+          </template>
+        </div>
+      </div>
+
+      <div x-show="exec?.hallucination_flags?.length" class="bg-rose-50 rounded-xl border border-rose-200 p-5">
+        <h3 class="font-semibold text-sm text-rose-800 mb-1">数字幻觉检测</h3>
+        <p class="text-[11px] text-rose-600 mb-3">以下数值未出现在确定性计算结果中，疑似模型自行生成。</p>
+        <template x-for="f in exec.hallucination_flags">
+          <div class="text-[11px] text-rose-700 mb-1.5">
+            <span class="font-mono font-medium" x-text="f.number"></span>
+            <div class="text-rose-500" x-text="f.context"></div>
+          </div>
+        </template>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 class="font-semibold text-sm mb-3">执行轨迹</h3>
+        <template x-for="t in (exec?.traces||[])" :key="t.step_id">
+          <div class="flex items-center gap-2 text-[12px] mb-1.5">
+            <span x-text="t.status==='ok'?'✅':'❌'"></span>
+            <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100" x-text="t.step_id"></span>
+            <span class="text-slate-600 truncate" x-text="t.name"></span>
+            <span class="ml-auto text-slate-400 shrink-0" x-text="t.duration_ms + 'ms'"></span>
+          </div>
+        </template>
+        <div class="text-[11px] text-slate-400 mt-3 pt-3 border-t border-slate-100">
+          共 <span x-text="exec?.row_count"></span> 行数据，产出
+          <span x-text="Object.keys(exec?.metrics||{}).length"></span> 项指标，
+          耗时 <span x-text="((exec?.total_duration_ms||0)/1000).toFixed(1)"></span>s
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// 页面若以 file:// 打开（双击 HTML 文件），相对路径 /api/... 无法解析成合法 URL，
+// fetch 会直接抛 "Failed to parse URL"。这里回落到本地服务地址，
+// 配合后端的 CORS 设置，让这种打开方式也能正常工作。
+const SERVED_OVER_HTTP = location.protocol === 'http:' || location.protocol === 'https:';
+const API_BASE = SERVED_OVER_HTTP ? '' : 'http://localhost:8000';
+const api = (path) => API_BASE + path;
+
+function app() {
+  return {
+    view: 'library',
+    servedOverHttp: SERVED_OVER_HTTP,
+    offline: false,
+    tabs: [
+      {id:'library', label:'资产库'},
+      {id:'generate', label:'生成 Skill'},
+    ],
+    examples: [
+      '帮我创建一个抖音直播运营复盘 Skill',
+      '做一个销售团队月度业绩诊断 Skill',
+      '我需要一个门店客流与坪效分析 Skill',
+      '创建一个新用户次日留存归因 Skill',
+    ],
+    status: {mock_mode:false, model:''},
+    stats: {},
+    skills: [],
+    skill: null, validation: null, versions: [],
+    genInput: '', generating: false, genResult: null,
+    file: null, running: false, exec: null, runError: null,
+
+    get statCards() {
+      return [
+        {label:'Skill 总数', value: this.stats.skill_count ?? 0},
+        {label:'已发布', value: this.stats.published_count ?? 0, cls:'text-emerald-600'},
+        {label:'累计版本', value: this.stats.version_count ?? 0},
+        {label:'执行次数', value: this.stats.run_count ?? 0},
+        {label:'检出幻觉数字', value: this.stats.hallucination_total ?? 0,
+         cls: (this.stats.hallucination_total>0) ? 'text-rose-600' : 'text-slate-800'},
+      ];
+    },
+
+    async init() {
+      try {
+        this.status = await (await fetch(api('/api/status'))).json();
+        await this.refresh();
+        this.offline = false;
+      } catch (e) {
+        // 连不上后端时给出可操作的提示，而不是让页面静默空白
+        this.offline = true;
+      }
+    },
+    async refresh() {
+      this.skills = await (await fetch(api('/api/skills'))).json();
+      this.stats  = await (await fetch(api('/api/stats'))).json();
+    },
+    go(v) { this.view = v; if (v==='library') this.refresh(); },
+    md(text) { return marked.parse(text || ''); },
+    apiUrl(path) { return api(path); },
+
+    async openSkill(id) {
+      const d = await (await fetch(api('/api/skills/' + id))).json();
+      this.skill = d.skill; this.validation = d.validation; this.versions = d.versions;
+      this.exec = null; this.runError = null; this.file = null;
+      this.view = 'detail';
+      window.scrollTo({top:0, behavior:'smooth'});
+    },
+
+    async generate() {
+      this.generating = true; this.genResult = null;
+      try {
+        const r = await fetch(api('/api/skills/generate'), {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({request: this.genInput})
+        });
+        this.genResult = await r.json();
+        await this.refresh();
+      } catch (e) {
+        this.genResult = {ok:false, error:'请求失败：' + e.message, attempts:[]};
+      } finally { this.generating = false; }
+    },
+
+    async publish() {
+      const r = await fetch(api('/api/skills/' + this.skill.skill_id + '/publish'), {method:'POST'});
+      if (!r.ok) {
+        const err = await r.json();
+        alert('发布失败：\n' + (err.detail?.errors || [err.detail]).join('\n'));
+        return;
+      }
+      await this.openSkill(this.skill.skill_id);
+      await this.refresh();
+    },
+
+    pickFile(e) { this.file = e.target.files[0]; this.exec = null; this.runError = null; },
+
+    async run() {
+      if (!this.file) return;
+      this.running = true; this.exec = null; this.runError = null;
+      const fd = new FormData(); fd.append('file', this.file);
+      try {
+        const r = await fetch(api('/api/skills/' + this.skill.skill_id + '/run'), {method:'POST', body:fd});
+        const d = await r.json();
+        if (r.status === 422) { this.runError = d; }
+        else if (!r.ok) { this.runError = {error: d.detail || '执行失败'}; }
+        else { this.exec = d.execution; await this.refresh(); }
+      } catch (e) {
+        this.runError = {error:'请求失败：' + e.message};
+      } finally { this.running = false; }
+    },
+  }
+}
+</script>
+</body>
+</html>
