@@ -1,0 +1,2674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>企业岗位经验 Skill 生成平台设计</title>
+<style>
+@page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.75;
+  color: #1f2933;
+  margin: 0;
+}
+
+/* ---------- 封面 ---------- */
+.cover {
+  height: 247mm;                 /* A4 减去上下边距，保证封面独占一页 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  page-break-after: always;
+}
+.cover .eyebrow { font-size: 11pt; color: #6b7280; letter-spacing: .12em; margin-bottom: 10mm; }
+.cover h1 { font-size: 26pt; font-weight: 700; line-height: 1.35; margin: 0 0 6mm; color: #111827; }
+.cover .lead {
+  font-size: 11pt; color: #4b5563; line-height: 1.9;
+  border-left: 3px solid #4f46e5; padding-left: 5mm; margin: 0 0 12mm;
+}
+.cover .meta { font-size: 10.5pt; color: #374151; line-height: 2.1; }
+.cover .meta b { display: inline-block; width: 22mm; color: #6b7280; font-weight: 400; }
+.cover .links { margin-top: 10mm; font-size: 10pt; line-height: 2; }
+.cover .links a { color: #4f46e5; text-decoration: none; word-break: break-all; }
+.cover .note { margin-top: 8mm; font-size: 9pt; color: #9ca3af; }
+
+/* ---------- 目录 ---------- */
+.toc { page-break-after: always; }
+.toc h2 { font-size: 16pt; border: none; margin: 0 0 8mm; }
+.toc ol { list-style: none; padding: 0; counter-reset: sec; }
+.toc li {
+  counter-increment: sec; font-size: 11pt; padding: 3mm 0;
+  border-bottom: 1px dotted #d1d5db;
+}
+.toc li::before { content: counter(sec, cjk-decimal) "、"; color: #6b7280; }
+.toc .desc { font-size: 9pt; color: #9ca3af; margin-top: 1mm; padding-left: 8mm; }
+
+/* ---------- 章节分隔 ---------- */
+.section { page-break-before: always; }
+.section-label {
+  font-size: 9pt; color: #6b7280; letter-spacing: .1em;
+  border-bottom: 2px solid #4f46e5; padding-bottom: 2mm; margin-bottom: 6mm;
+}
+
+/* ---------- 正文 ---------- */
+h1 { font-size: 19pt; margin: 0 0 5mm; color: #111827; page-break-after: avoid; }
+h2 {
+  font-size: 14pt; margin: 9mm 0 4mm; padding-bottom: 2mm;
+  border-bottom: 1px solid #e5e7eb; color: #1f2933; page-break-after: avoid;
+}
+h3 { font-size: 11.5pt; margin: 6mm 0 3mm; color: #374151; page-break-after: avoid; }
+h4 { font-size: 10.5pt; margin: 5mm 0 2mm; color: #4b5563; page-break-after: avoid; }
+p { margin: 2.5mm 0; }
+ul, ol { margin: 2.5mm 0 2.5mm 6mm; padding: 0; }
+li { margin: 1.2mm 0; }
+strong { color: #111827; font-weight: 600; }
+
+table {
+  width: 100%; border-collapse: collapse; margin: 4mm 0;
+  font-size: 9pt; page-break-inside: avoid;
+}
+th, td { border: 1px solid #d1d5db; padding: 2mm 2.5mm; text-align: left; vertical-align: top; }
+th { background: #f3f4f6; font-weight: 600; }
+tr:nth-child(even) td { background: #fafafa; }
+
+pre {
+  background: #f6f8fa; border: 1px solid #e5e7eb; border-radius: 3px;
+  padding: 3mm; font-size: 8pt; line-height: 1.55; overflow-x: auto;
+  white-space: pre-wrap; word-break: break-word; page-break-inside: avoid;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+}
+code {
+  background: #f3f4f6; padding: .3mm 1.2mm; border-radius: 2px;
+  font-size: 8.8pt; font-family: "SF Mono", Menlo, Consolas, monospace;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+blockquote {
+  border-left: 3px solid #c7d2fe; background: #f8f9ff;
+  padding: 2.5mm 4mm; margin: 3mm 0; color: #4b5563;
+}
+blockquote p { margin: 1.5mm 0; }
+
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 6mm 0; }
+a { color: #4f46e5; text-decoration: none; }
+</style></head>
+<body>
+<div class="cover">
+  <div class="eyebrow">FDE Echo 实习生笔试</div>
+  <h1>企业岗位经验 Skill 生成平台设计</h1>
+  <div class="lead">
+    把优秀员工的岗位经验，通过自然语言描述，<br>
+    自动转换为可执行、可评测、可版本管理的 AI 员工能力资产。
+  </div>
+  <div class="meta">
+    <div><b>姓名</b>袁陈博</div>
+    <div><b>学校</b>雷丁大学 亨利商学院</div>
+    <div><b>专业</b>数字商业与数据分析</div>
+  </div>
+  <div class="links">
+    <div><b>在线 Demo</b>　<a href="https://sparkdata.onrender.com">https://sparkdata.onrender.com</a></div>
+    <div><b>代码仓库</b>　<a href="https://github.com/chenboyuan0818/sparkdata">https://github.com/chenboyuan0818/sparkdata</a></div>
+  </div>
+  <div class="note">
+    在线 Demo 无需任何配置即可直接体验完整流程。<br>
+    免费实例在无访问时会休眠，首次打开约需一分钟唤醒。
+  </div>
+</div>
+
+<div class="toc">
+  <h2>目录</h2>
+  <ol><li>产品设计文档（PRD）</li><li>技术方案说明</li><li>面试问题回答</li></ol>
+  <div class="desc" style="margin-top:8mm">
+    可运行 Demo 见封面链接，代码与自动化测试均在仓库中。
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">第 一 部分 · 产品设计文档（PRD）</div>
+  <h1>企业岗位经验 Skill 生成平台 — 产品设计文档（PRD）</h1>
+<blockquote>
+<p>版本 v1.0 ｜ 面向数花智算 DataAgent 实习生面试题<br />
+关联文档：《02_技术方案说明》《03_面试问题回答》</p>
+</blockquote>
+<hr />
+<h2>一、一句话定义</h2>
+<p><strong>把优秀员工"怎么看数据、看哪些指标、异常了怎么归因、然后该做什么"的岗位经验，通过自然语言描述，自动沉淀为可复用、可版本管理、可评测的 AI 员工能力资产（Skill）。</strong></p>
+<hr />
+<h2>二、问题定义</h2>
+<h3>2.1 我们观察到的真实现象</h3>
+<p>企业里最值钱的分析能力，不在报表系统里，在人脑子里。</p>
+<p>一个做了三年的抖音直播运营，看到"昨天 GMV 掉了 30%"，他的动作是自动的：</p>
+<ol>
+<li>先看是<strong>流量问题还是转化问题</strong>——拉曝光量、进入率、停留时长</li>
+<li>如果是流量掉了，看是<strong>自然流量还是付费流量</strong>——分渠道拆</li>
+<li>如果是转化掉了，看是<strong>商品问题还是话术问题</strong>——拆 SKU 点击转化率、看讲解时长分布</li>
+<li>定位到具体原因后，他知道<strong>对应的动作是什么</strong>——是调价、换品、改脚本，还是加投流</li>
+</ol>
+<p>这四步在他脑子里可能只用 30 秒。但是：</p>
+<ul>
+<li><strong>这套东西从没被写下来过。</strong> 他自己都说不清"我就是这么看的"</li>
+<li><strong>新人复制不了。</strong> 新人拿到同样的数据，只会说"GMV 掉了 30%"，说不出为什么、也说不出怎么办</li>
+<li><strong>他离职了，能力归零。</strong> 团队要重新养一个人，成本 6-12 个月</li>
+<li><strong>他也不可能被复制成 10 个。</strong> 公司有 20 个直播间，他只能盯 3 个</li>
+</ul>
+<h3>2.2 现有方案为什么不够</h3>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>为什么不够</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>写 SOP 文档</strong></td>
+<td>文档是死的，不会执行。人还是要一步步照着做，没有节省时间</td>
+</tr>
+<tr>
+<td><strong>让业务同学自己用 ChatGPT</strong></td>
+<td>每个人 Prompt 水平不同、口径不同、结果不可复现；今天问和明天问答案不一样；老板不敢用这个结果做决策</td>
+</tr>
+<tr>
+<td><strong>BI 报表/数据看板</strong></td>
+<td>只回答"发生了什么"，不回答"为什么"和"接下来怎么办"。看板做得再多，还是需要一个懂业务的人来解读</td>
+</tr>
+<tr>
+<td><strong>找外包开发定制智能体</strong></td>
+<td>一个 Skill 排期两周，20 个岗位场景做不完；业务口径一变就要返工；业务方永远等技术方</td>
+</tr>
+</tbody>
+</table>
+<p><strong>核心矛盾：懂业务的人不会写代码，会写代码的人不懂业务。</strong></p>
+<h3>2.3 我们的解法</h3>
+<p>让懂业务的人<strong>用自然语言把经验说出来</strong>，系统自动结构化成一份可执行的资产。</p>
+<pre><code>&quot;帮我创建一个抖音直播运营复盘 Skill&quot;
+              ↓
+    LLM 生成 + 校验 + 人工确认
+              ↓
+  一份结构化的 SkillSpec（7 个字段）
+              ↓
+   上传数据 → 执行 → 输出复盘报告
+</code></pre>
+<hr />
+<h2>三、目标用户</h2>
+<h3>3.1 三类角色（Skill 的"生产—消费—治理"闭环）</h3>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>典型画像</th>
+<th>核心诉求</th>
+<th>在平台上做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Skill 创建者</strong><br/>（业务专家 / 主管）</td>
+<td>电商运营负责人、销售 Leader、增长负责人。有 3 年以上经验，但不会写代码</td>
+<td>"我的经验能不能被复制，而不是我天天救火"</td>
+<td>用自然语言创建 Skill → 审核系统生成的内容 → 校准指标口径和阈值 → 发布</td>
+</tr>
+<tr>
+<td><strong>Skill 使用者</strong><br/>（一线执行 / 新人）</td>
+<td>运营专员、销售代表、门店店长</td>
+<td>"我不知道该看哪些数据，也不知道数据异常了该做什么"</td>
+<td>选 Skill → 上传数据 → 拿到分析报告和行动建议</td>
+</tr>
+<tr>
+<td><strong>Skill 管理者</strong><br/>（数据/AI 平台负责人）</td>
+<td>企业数字化负责人、AI 平台 owner</td>
+<td>"我要保证公司里跑的 AI 分析是靠谱的、可管的、可审计的"</td>
+<td>管理 Skill 资产目录、审批发布、看评测分数、控权限、看使用数据</td>
+</tr>
+</tbody>
+</table>
+<h3>3.2 首批切入场景（优先级排序）</h3>
+<p>按"经验密度高 + 数据结构化程度高 + 结果可验证"三个维度筛选：</p>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>场景</th>
+<th>为什么优先</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td>电商/直播运营复盘</td>
+<td>数据标准化程度最高（平台后台可导出）、指标体系成熟、复盘频次高（日/周）、效果可验证</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td>销售经营分析</td>
+<td>CRM 数据结构清晰、漏斗模型标准、管理层刚需</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>用户增长分析</td>
+<td>数据来源多样（埋点+渠道），归因逻辑复杂，价值高但难度大</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>零售门店分析</td>
+<td>门店多、复制需求最强，但数据质量参差</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>四、核心概念：Skill 是什么</h2>
+<h3>4.1 Skill vs Prompt：这是本平台最关键的定义</h3>
+<p><strong>Prompt 是一次性的指令，Skill 是被结构化封装的资产。</strong></p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Prompt</th>
+<th>Skill</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>形态</strong></td>
+<td>一段自然语言文本</td>
+<td>一份结构化 Schema（JSON）</td>
+</tr>
+<tr>
+<td><strong>状态</strong></td>
+<td>无状态，用完即弃</td>
+<td>有版本、有归属人、有生命周期</td>
+</tr>
+<tr>
+<td><strong>输入约定</strong></td>
+<td>无契约，喂什么算什么</td>
+<td>有明确的 <code>input_schema</code>，字段缺失会拦截</td>
+</tr>
+<tr>
+<td><strong>计算方式</strong></td>
+<td>全部交给模型，包括算数</td>
+<td>数值走确定性代码，模型只做解读</td>
+</tr>
+<tr>
+<td><strong>输出</strong></td>
+<td>每次格式都可能不同</td>
+<td>固定 <code>output_template</code>，结构稳定可下游消费</td>
+</tr>
+<tr>
+<td><strong>质量保障</strong></td>
+<td>靠人肉试</td>
+<td>有评测集、有回归测试、有评分卡</td>
+</tr>
+<tr>
+<td><strong>复用</strong></td>
+<td>靠复制粘贴，容易走样</td>
+<td>平台统一分发，一处修改全员生效</td>
+</tr>
+<tr>
+<td><strong>可管理性</strong></td>
+<td>散落在个人聊天记录里</td>
+<td>集中在资产库，可授权、可审计、可下架</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>一个类比：</strong> Prompt 是"你口头交代同事一句话"，Skill 是"你把这件事写成了带输入输出规范、带检查清单、带验收标准的岗位作业指导书，并且这份指导书本身可以自动执行"。</p>
+</blockquote>
+<h3>4.2 Skill 的七个核心组成（对应题目要求）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>字段</th>
+<th>作用</th>
+<th>举例（抖音直播复盘 Skill）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Skill 名称</strong><br/><code>name</code></td>
+<td>资产标识，用于检索和调用</td>
+<td>抖音直播运营复盘分析</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Skill 描述</strong><br/><code>description</code></td>
+<td>让使用者判断"这个是不是我要的"</td>
+<td>基于单场直播的流量、互动、转化、商品四维数据，定位 GMV 波动原因并输出可执行改进动作</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>使用场景</strong><br/><code>use_cases</code></td>
+<td>明确边界，防止误用</td>
+<td>① 单场直播结束后复盘<br/>② 周维度多场对比<br/>③ GMV 异常波动归因</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>输入数据定义</strong><br/><code>input_schema</code></td>
+<td><strong>数据契约</strong>——决定 Skill 能不能真的跑起来</td>
+<td><code>场次ID(string,必填)</code> <code>曝光人数(int,必填)</code> <code>进入直播间人数(int,必填)</code> <code>平均停留时长(float,秒)</code> <code>商品点击人数(int)</code> <code>成交订单数(int)</code> <code>GMV(float,元)</code> …</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>分析流程</strong><br/><code>analysis_flow</code></td>
+<td><strong>Skill 的骨架</strong>——把专家的思考路径固化下来</td>
+<td>Step1【计算】算出进入率/停留/点击率/转化率四个核心指标<br/>Step2【计算】与基准期对比，算变化率<br/>Step3【判断】按漏斗顺序定位第一个显著下滑的环节<br/>Step4【LLM】对该环节做归因分析<br/>Step5【LLM】匹配行动建议库，输出改进动作</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Agent Prompt</strong><br/><code>agent_prompt</code></td>
+<td>角色设定 + 分析准则 + 禁止事项</td>
+<td>"你是资深抖音直播运营专家…… 【禁止】不得自行计算任何数值，所有数字必须引用上游计算结果；【禁止】不得在数据不足时臆测原因，应明确指出缺失字段"</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>输出结果模板</strong><br/><code>output_template</code></td>
+<td>保证输出结构稳定，可被下游消费</td>
+<td>一、本场核心指标概览（表格）<br/>二、漏斗诊断结论<br/>三、根因分析<br/>四、改进建议（按优先级）<br/>五、数据说明与局限</td>
+</tr>
+</tbody>
+</table>
+<h3>4.3 我们额外补充的两个字段</h3>
+<p>题目要求了 7 个，我们在实现时补充两个字段，理由是它们直接决定 Skill 能不能"被管理"：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>metric_dictionary</code></td>
+<td><strong>指标口径字典</strong>。明确"转化率"到底 = 成交订单数/进入人数 还是 /商品点击人数。这是企业内部最容易吵架的地方，必须显式写死</td>
+</tr>
+<tr>
+<td><code>version</code> + <code>status</code></td>
+<td><strong>版本与状态</strong>（draft / published / deprecated）。没有版本就没有回滚，没有回滚就不敢改</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>五、核心用户流程</h2>
+<h3>5.1 主流程：从一句话到一份报告</h3>
+<pre><code>【创建者视角】
+ ① 输入需求
+    &quot;帮我创建一个抖音直播运营复盘 Skill&quot;
+         ↓
+ ② 系统生成 Skill 草稿（3-10 秒）
+    七个字段全部填充完成
+         ↓
+ ③ 配置展示与人工校准  ← 关键环节，不能跳过
+    创建者逐项检查：
+    - 输入字段对不对？我们后台能导出这些数据吗？
+    - 指标口径对不对？我们公司&quot;转化率&quot;是这么算的吗？
+    - 分析流程符合我的实际思路吗？
+    - 阈值设多少算异常？
+         ↓
+ ④ 发布 → 进入 Skill 资产库（v1.0）
+
+【使用者视角】
+ ⑤ 从资产库选择 Skill
+         ↓
+ ⑥ 上传数据（CSV）→ 系统按 input_schema 校验
+    ├─ 字段缺失 → 明确报错，指出缺哪个字段，不允许继续
+    └─ 字段名不一致 → 提供字段映射界面
+         ↓
+ ⑦ 执行 analysis_flow
+    ├─ metric 步骤 → pandas 确定性计算
+    └─ llm 步骤 → 模型做归因和建议
+         ↓
+ ⑧ 按 output_template 渲染报告
+    每个数字都可点开看计算来源
+</code></pre>
+<h3>5.2 异常流程处理（体现产品成熟度）</h3>
+<table>
+<thead>
+<tr>
+<th>异常</th>
+<th>处理方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LLM 生成的 JSON 不合法</td>
+<td>自动重试 2 次，仍失败则降级为模板化生成 + 提示用户手动补充</td>
+</tr>
+<tr>
+<td>生成的 Skill 逻辑不闭环（流程里用了 input 中没有的字段）</td>
+<td>校验层直接拦截，标红提示"分析流程 Step3 引用了未定义字段：退款金额"</td>
+</tr>
+<tr>
+<td>用户上传数据缺少必填字段</td>
+<td>拦截执行，明确列出缺失字段清单，并给出"从抖音后台哪个页面导出"的提示</td>
+</tr>
+<tr>
+<td>用户数据字段名与 schema 不一致</td>
+<td>自动模糊匹配 + 人工确认的字段映射界面</td>
+</tr>
+<tr>
+<td>数据行数过少（如仅 1 场直播但 Skill 需要对比基准）</td>
+<td>降级执行：跳过对比类步骤，在报告中明确标注"因缺少基准期数据，本次未做同比分析"</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>六、Skill 资产如何管理</h2>
+<p>这是把"玩具 Demo"和"企业级产品"区分开的部分。</p>
+<h3>6.1 资产管理五要素</h3>
+<p><strong>① 目录与检索</strong><br />
+按业务域（电商/销售/增长/零售）+ 岗位（运营/分析师/店长）+ 分析类型（复盘/诊断/预测）三维打标。支持自然语言检索"我想找个分析退货率的"。</p>
+<p><strong>② 版本管理</strong><br />
+- 每次修改产生新版本，旧版本保留可回滚<br />
+- 版本状态：<code>草稿 → 待评审 → 已发布 → 已归档</code><br />
+- 已发布版本不可直接编辑，必须新建版本（防止线上行为被静默改变）<br />
+- 记录每个版本的 diff、修改人、修改理由</p>
+<p><strong>③ 权限与归属</strong><br />
+- 每个 Skill 有明确 Owner（通常是创建者所在部门负责人）<br />
+- 三级权限：<code>可查看</code> / <code>可执行</code> / <code>可编辑</code><br />
+- 敏感 Skill（如涉及成本、毛利）按组织架构限制执行范围</p>
+<p><strong>④ 生命周期治理</strong><br />
+- <strong>上线</strong>：需通过评测门槛 + Owner 审批<br />
+- <strong>监控</strong>：跟踪调用量、执行成功率、用户评分<br />
+- <strong>下架</strong>：连续 N 天零调用 或 评分低于阈值 → 自动进入待处理队列，提醒 Owner 优化或归档<br />
+- <strong>业务变更响应</strong>：当底层指标口径变更（如平台改了 GMV 定义），系统标记所有引用该指标的 Skill 为"待复核"</p>
+<p><strong>⑤ 复用与继承</strong><br />
+- 支持从已有 Skill 复制创建（如"抖音直播复盘"→ 派生"快手直播复盘"）<br />
+- 抽取公共指标字典和行动建议库，跨 Skill 共享</p>
+<h3>6.2 资产健康度看板</h3>
+<p>管理者视角需要看到的：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skill 总数 / 已发布数 / 活跃数</td>
+<td>资产规模与活性</td>
+</tr>
+<tr>
+<td>月调用总量 / Top10 高频 Skill</td>
+<td>哪些经验真的在被复用</td>
+</tr>
+<tr>
+<td>平均评测分 / 低分 Skill 清单</td>
+<td>质量分布</td>
+</tr>
+<tr>
+<td>执行成功率 / 失败原因 TOP</td>
+<td>主要是数据问题还是 Skill 问题</td>
+</tr>
+<tr>
+<td>人工修正率</td>
+<td>用户拿到报告后有多少比例做了修改——这是最真实的质量信号</td>
+</tr>
+<tr>
+<td>覆盖岗位数 / 未覆盖岗位</td>
+<td>资产建设的空白区</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>七、如何验证 Skill 是否有效</h2>
+<p><strong>核心观点：不能用"看起来对不对"来验证，必须建立分层验证体系。</strong></p>
+<h3>7.1 三层验证</h3>
+<p><strong>第一层：生成期验证（自动，秒级）</strong></p>
+<p>发生在 Skill 创建时，防止生成出结构上就不可用的 Skill。</p>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>判定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Schema 完整性</td>
+<td>七个字段是否齐全、类型是否正确</td>
+</tr>
+<tr>
+<td>逻辑闭环性</td>
+<td>analysis_flow 里引用的每个字段，是否都在 input_schema 中定义</td>
+</tr>
+<tr>
+<td>指标合法性</td>
+<td>用到的指标是否在指标字典白名单内，口径是否明确</td>
+</tr>
+<tr>
+<td>输出一致性</td>
+<td>output_template 的占位符，是否都能被 analysis_flow 的产出填充</td>
+</tr>
+<tr>
+<td>可执行性</td>
+<td>用一份 mock 数据能否跑通全流程</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第二层：执行期验证（自动，每次运行）</strong></p>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>判定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输入数据校验</td>
+<td>必填字段是否齐全、类型是否正确、是否有异常值（如转化率 &gt; 100%）</td>
+</tr>
+<tr>
+<td>计算正确性</td>
+<td>metric 步骤走确定性代码，结果天然可复现</td>
+</tr>
+<tr>
+<td>结论可溯源</td>
+<td>报告中每个数字都能追溯到源数据行和计算公式</td>
+</tr>
+<tr>
+<td>幻觉检测</td>
+<td>扫描 LLM 输出中的数字，是否都出现在上游计算结果中——<strong>出现了未经计算的数字即判定为幻觉，拦截并重试</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>第三层：结果期验证（半自动，周期性）</strong></p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>黄金评测集（Golden Set）</strong></td>
+<td>每个 Skill 配 5-10 组"历史数据 + 专家标准答案"。每次 Skill 修改后自动跑回归，对比新版本结论与标准答案的一致性</td>
+</tr>
+<tr>
+<td><strong>专家盲评</strong></td>
+<td>让业务专家在不知道是 AI 还是人写的情况下，对报告打分</td>
+</tr>
+<tr>
+<td><strong>五维评分卡</strong>（见下）</td>
+<td>结构化打分，可量化、可追踪趋势</td>
+</tr>
+<tr>
+<td><strong>业务结果回归</strong></td>
+<td>最硬的指标：按 Skill 建议采取行动的场次，后续指标是否真的改善</td>
+</tr>
+</tbody>
+</table>
+<h3>7.2 Skill 质量评分卡</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>权重</th>
+<th>评价标准</th>
+<th>打分方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>数据准确性</strong></td>
+<td>30%</td>
+<td>报告中的数字是否与源数据一致，无幻觉</td>
+<td>自动（比对计算结果）</td>
+</tr>
+<tr>
+<td><strong>归因合理性</strong></td>
+<td>25%</td>
+<td>定位的原因是否符合业务逻辑，是否符合专家判断</td>
+<td>专家评 + 与 Golden Set 对比</td>
+</tr>
+<tr>
+<td><strong>建议可执行性</strong></td>
+<td>25%</td>
+<td>建议是否具体到"谁、做什么、什么时候"，而非"建议优化转化率"这种废话</td>
+<td>专家评</td>
+</tr>
+<tr>
+<td><strong>结构完整性</strong></td>
+<td>10%</td>
+<td>是否严格遵循 output_template，无缺项</td>
+<td>自动</td>
+</tr>
+<tr>
+<td><strong>表达清晰度</strong></td>
+<td>10%</td>
+<td>是否说人话，是否有无关废话</td>
+<td>专家评</td>
+</tr>
+</tbody>
+</table>
+<p><strong>发布门槛：总分 ≥ 80 分，且数据准确性维度 ≥ 95 分（数字错了一切归零）。</strong></p>
+<h3>7.3 上线后的持续验证</h3>
+<table>
+<thead>
+<tr>
+<th>信号</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>用户评分（👍/👎 + 可选理由）</td>
+<td>最直接的反馈</td>
+</tr>
+<tr>
+<td><strong>人工修正率</strong></td>
+<td>用户导出报告后改了多少——修正率越高说明 Skill 越不好用</td>
+</tr>
+<tr>
+<td>采纳率</td>
+<td>建议被真正执行的比例</td>
+</tr>
+<tr>
+<td>复用率</td>
+<td>同一用户是否会第二次使用这个 Skill</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>八、MVP 范围与迭代规划</h2>
+<h3>8.1 MVP（本次 Demo 范围）</h3>
+<p><strong>目标：跑通完整闭环，验证"自然语言 → 可执行 Skill"这条路走得通。</strong></p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>MVP 包含</th>
+<th>MVP 不包含</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skill 生成</td>
+<td>自然语言输入 → 七字段生成 → Schema 校验</td>
+<td>多轮对话式澄清、语音输入</td>
+</tr>
+<tr>
+<td>Skill 配置</td>
+<td>可视化展示 + 关键字段可编辑</td>
+<td>拖拽式流程编辑器</td>
+</tr>
+<tr>
+<td>Skill 存储</td>
+<td>本地 JSON/SQLite，带版本号</td>
+<td>数据库集群、多租户隔离</td>
+</tr>
+<tr>
+<td>数据接入</td>
+<td>CSV 上传 + 字段映射</td>
+<td>数据库直连、API 对接、实时数仓</td>
+</tr>
+<tr>
+<td>Skill 执行</td>
+<td>metric 确定性计算 + llm 归因</td>
+<td>定时调度、批量执行</td>
+</tr>
+<tr>
+<td>结果输出</td>
+<td>Markdown 报告 + 图表</td>
+<td>PDF 导出、飞书/钉钉推送</td>
+</tr>
+<tr>
+<td>质量保障</td>
+<td>Schema 校验 + 数字幻觉检测</td>
+<td>完整评测集、专家评审工作流</td>
+</tr>
+<tr>
+<td>预置内容</td>
+<td>3 个预置 Skill + 配套示例数据</td>
+<td>Skill 市场</td>
+</tr>
+</tbody>
+</table>
+<h3>8.2 后续迭代</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>重点</th>
+<th>关键能力</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>V1</strong> 质量可信</td>
+<td>让企业敢用</td>
+<td>评测集 + 回归测试 + 版本管理 + 审批流</td>
+</tr>
+<tr>
+<td><strong>V2</strong> 数据打通</td>
+<td>降低使用门槛</td>
+<td>数据源直连（MySQL/数仓/电商平台 API）、定时执行、异常自动预警</td>
+</tr>
+<tr>
+<td><strong>V3</strong> 资产运营</td>
+<td>规模化复制</td>
+<td>Skill 市场、行业模板库、跨 Skill 编排（多个 Skill 组成一个"AI 员工"）</td>
+</tr>
+<tr>
+<td><strong>V4</strong> 组织协同</td>
+<td>成为基础设施</td>
+<td>多 Agent 协作、AI 员工绩效看板、与企业 OA/IM 深度集成</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>九、成功指标</h2>
+<h3>9.1 北极星指标</h3>
+<p><strong>月度有效 Skill 执行次数</strong> —— 有效 = 执行成功 且 用户未给出负面反馈。</p>
+<p>选它的理由：它同时验证了供给侧（有人愿意创建 Skill）和需求侧（有人愿意用），且过滤掉了刷量和无效执行。</p>
+<h3>9.2 分层指标</h3>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>指标</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>供给</strong></td>
+<td>累计发布 Skill 数、活跃创建者数</td>
+<td>经验有没有在被沉淀</td>
+</tr>
+<tr>
+<td><strong>需求</strong></td>
+<td>月执行次数、周活使用者数、人均执行次数</td>
+<td>经验有没有在被复用</td>
+</tr>
+<tr>
+<td><strong>质量</strong></td>
+<td>平均评测分、执行成功率、人工修正率、👍率</td>
+<td>沉淀下来的东西靠不靠谱</td>
+</tr>
+<tr>
+<td><strong>效率</strong></td>
+<td>单次分析耗时（vs 人工基线）、新人达到熟手水平所需时间</td>
+<td>到底省了多少</td>
+</tr>
+<tr>
+<td><strong>业务</strong></td>
+<td>采纳建议后的指标改善幅度</td>
+<td>最终价值证明</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>十、风险与应对</h2>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>影响</th>
+<th>应对</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LLM 生成的 Skill 质量不稳定</strong></td>
+<td>用户第一次用就失望，不会有第二次</td>
+<td>JSON Schema 强约束 + 指标字典白名单 + 生成后自检 + <strong>强制人工确认环节</strong></td>
+</tr>
+<tr>
+<td><strong>业务方不信任 AI 分析结果</strong></td>
+<td>做出来没人用</td>
+<td>数值走确定性计算 + 结论可溯源到数据行 + 报告中明确标注局限性</td>
+</tr>
+<tr>
+<td><strong>数据质量差导致垃圾进垃圾出</strong></td>
+<td>结论错误但看起来很像模像样</td>
+<td>输入数据强校验 + 异常值检测 + 数据不足时降级执行并明确标注</td>
+</tr>
+<tr>
+<td><strong>创建者不愿意贡献经验</strong>（怕被替代）</td>
+<td>供给端枯竭</td>
+<td>产品定位为"专家能力放大器"而非"替代者"；Skill 归属和贡献度可见，与激励挂钩</td>
+</tr>
+<tr>
+<td><strong>指标口径在企业内部就不统一</strong></td>
+<td>Skill 一发布就被质疑</td>
+<td>指标字典作为独立模块前置建设，先统一口径再建 Skill</td>
+</tr>
+<tr>
+<td><strong>过度依赖单一大模型</strong></td>
+<td>供应商风险、成本风险</td>
+<td>模型层抽象，支持多模型可切换；确定性计算部分不依赖模型</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>十一、非目标（明确不做什么）</h2>
+<p>明确边界同样重要：</p>
+<ul>
+<li>❌ <strong>不做 BI 报表工具</strong>。我们不替代看板，我们消费看板的数据做解读</li>
+<li>❌ <strong>不做通用 Agent 平台</strong>。只聚焦"经营分析"这一类岗位经验</li>
+<li>❌ <strong>不追求全自动</strong>。人工确认环节是特性不是缺陷——企业级 AI 的信任来自人在回路</li>
+<li>❌ <strong>不做数据治理</strong>。假设企业已有基本可用的数据，我们不解决数据清洗和数仓建设</li>
+</ul>
+</div>
+
+<div class="section">
+  <div class="section-label">第 二 部分 · 技术方案说明</div>
+  <h1>企业岗位经验 Skill 生成平台 — 技术方案说明</h1>
+<blockquote>
+<p>版本 v1.0 ｜ 关联文档：《01_产品设计文档 PRD》《03_面试问题回答》</p>
+</blockquote>
+<hr />
+<h2>一句话技术主张</h2>
+<p><strong>整个系统围绕一份 <code>SkillSpec</code> JSON Schema 展开：LLM 负责把自然语言翻译成 SkillSpec，校验层负责保证 SkillSpec 可执行，执行引擎负责把 SkillSpec 变成分析报告。而报告里的每一个数字，都由确定性代码算出，不由 LLM 生成。</strong></p>
+<p>最后这半句是整套方案的信任地基，也是它区别于"套壳 Prompt 生成器"的地方。</p>
+<hr />
+<h2>一、整体系统架构</h2>
+<h3>1.1 分层架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│  接入层  Web UI（单页应用）                                  │
+│  Skill 创建 │ 配置展示与编辑 │ 数据上传 │ 报告查看            │
+└───────────────────────────┬─────────────────────────────────┘
+                            │ HTTP / JSON
+┌───────────────────────────▼─────────────────────────────────┐
+│  应用层  FastAPI 服务                                        │
+│  POST /api/skills/generate   自然语言 → SkillSpec           │
+│  GET  /api/skills            资产列表                        │
+│  PUT  /api/skills/{id}       编辑并产生新版本                │
+│  POST /api/skills/{id}/run   上传数据并执行                  │
+└──────┬──────────────────────────────────┬───────────────────┘
+       │                                  │
+┌──────▼───────────────────┐   ┌──────────▼──────────────────┐
+│  Skill 生成链路           │   │  Skill 执行链路              │
+│  ┌────────────────────┐  │   │  ┌───────────────────────┐  │
+│  │ 意图解析            │  │   │  │ 数据加载与字段映射     │  │
+│  ├────────────────────┤  │   │  ├───────────────────────┤  │
+│  │ LLM 结构化生成      │  │   │  │ input_schema 校验     │  │
+│  │ (JSON Schema 约束)  │  │   │  ├───────────────────────┤  │
+│  ├────────────────────┤  │   │  │ 流程编排器             │  │
+│  │ 四道校验闸          │  │   │  │  ├ metric → pandas   │  │
+│  ├────────────────────┤  │   │  │  └ llm    → Claude   │  │
+│  │ 人工确认与校准      │  │   │  ├───────────────────────┤  │
+│  └────────────────────┘  │   │  │ 幻觉检测 + 报告渲染    │  │
+└──────────────────────────┘   │  └───────────────────────┘  │
+                               └─────────────────────────────┘
+       │                                  │
+┌──────▼──────────────────────────────────▼───────────────────┐
+│  能力层                                                      │
+│  LLM 网关（多模型抽象）│ 指标计算引擎（pandas）              │
+│  指标字典 │ 行动建议库 │ 评测引擎                             │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│  存储层  SQLite（Demo）/ PostgreSQL（生产）                  │
+│  Skill 资产表（含版本）│ 执行记录表 │ 评测结果表 │ 上传文件   │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>1.2 技术选型与理由</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>选型</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>后端</td>
+<td><strong>Python 3.11 + FastAPI</strong></td>
+<td>数据分析生态在 Python；FastAPI 自带 Pydantic，天然适合做 SkillSpec 的 Schema 定义与校验；自动生成 OpenAPI 文档</td>
+</tr>
+<tr>
+<td>计算</td>
+<td><strong>pandas</strong></td>
+<td>确定性指标计算的标准选择，可读性强，面试时能逐行解释</td>
+</tr>
+<tr>
+<td>Schema</td>
+<td><strong>Pydantic v2</strong></td>
+<td>一份模型同时用于：API 请求校验、LLM 结构化输出约束、存储序列化。三处复用，避免定义漂移</td>
+</tr>
+<tr>
+<td>LLM</td>
+<td><strong>Anthropic Claude（claude-opus-5）</strong></td>
+<td>结构化输出（<code>output_config.format</code>）能力强，长上下文利于塞入指标字典和 few-shot；通过网关层抽象，可切换其他模型</td>
+</tr>
+<tr>
+<td>前端</td>
+<td><strong>原生 HTML + Tailwind CSS (CDN) + Alpine.js</strong></td>
+<td>无构建步骤、无 npm 依赖，单文件即可运行；Tailwind 保证视觉质量；避免引入不必要的框架复杂度</td>
+</tr>
+<tr>
+<td>存储</td>
+<td><strong>SQLite（Demo）</strong></td>
+<td>零配置、单文件、易于随仓库分发；生产切 PostgreSQL 仅需换 SQLAlchemy 连接串</td>
+</tr>
+<tr>
+<td>部署</td>
+<td><strong>Railway / Hugging Face Spaces</strong></td>
+<td>对 Python 项目零配置部署，免费额度足够 Demo</td>
+</tr>
+</tbody>
+</table>
+<h3>1.3 目录结构</h3>
+<pre><code>skill-platform/
+├── app/
+│   ├── main.py                 # FastAPI 入口与路由
+│   ├── schemas/
+│   │   └── skill_spec.py       # ★ SkillSpec Pydantic 模型（全系统的中心）
+│   ├── generator/
+│   │   ├── prompt.py           # 生成用的 system prompt + few-shot
+│   │   ├── generator.py        # 调用 LLM 产出 SkillSpec
+│   │   └── validator.py        # ★ 四道校验闸
+│   ├── executor/
+│   │   ├── loader.py           # CSV 加载与字段映射
+│   │   ├── metrics.py          # ★ 确定性指标计算引擎
+│   │   ├── orchestrator.py     # analysis_flow 编排
+│   │   └── renderer.py         # 按 output_template 渲染报告
+│   ├── llm/
+│   │   └── client.py           # LLM 网关（多模型抽象）
+│   ├── knowledge/
+│   │   ├── metric_dictionary.yaml   # 指标口径白名单
+│   │   └── action_library.yaml      # 行动建议库
+│   ├── evaluation/
+│   │   └── scorer.py           # 评分卡与幻觉检测
+│   └── storage/
+│       └── repository.py       # Skill 资产 CRUD + 版本管理
+├── static/
+│   └── index.html              # 单页前端
+├── data/
+│   ├── skills.db               # SQLite
+│   ├── presets/                # 3 个预置 Skill
+│   └── samples/                # 配套示例 CSV
+├── tests/
+│   └── golden_set/             # 评测集
+├── requirements.txt
+└── README.md
+</code></pre>
+<hr />
+<h2>二、核心数据结构：SkillSpec</h2>
+<p><strong>这是整个系统的中心。所有模块都围绕它读写。</strong></p>
+<pre><code class="language-python">from pydantic import BaseModel, Field
+from typing import Literal, Optional
+from enum import Enum
+
+class FieldType(str, Enum):
+    STRING = &quot;string&quot;
+    INTEGER = &quot;integer&quot;
+    FLOAT = &quot;float&quot;
+    DATE = &quot;date&quot;
+    ENUM = &quot;enum&quot;
+
+class InputField(BaseModel):
+    &quot;&quot;&quot;输入数据定义 —— 数据契约&quot;&quot;&quot;
+    name: str                          # 字段名，如 &quot;曝光人数&quot;
+    type: FieldType
+    required: bool = True
+    unit: Optional[str] = None         # 单位，如 &quot;人&quot; &quot;元&quot; &quot;秒&quot;
+    description: str                   # 口径说明，如 &quot;直播间被展示的去重人数&quot;
+    source_hint: Optional[str] = None  # 从哪导出，如 &quot;抖音罗盘-直播分析-流量看板&quot;
+
+class MetricStep(BaseModel):
+    &quot;&quot;&quot;确定性计算步骤 —— 由代码执行，不经过 LLM&quot;&quot;&quot;
+    type: Literal[&quot;metric&quot;] = &quot;metric&quot;
+    step_id: str
+    name: str                          # &quot;计算核心转化漏斗指标&quot;
+    formula: str                       # &quot;进入率 = 进入直播间人数 / 曝光人数&quot;
+    inputs: list[str]                  # 依赖的输入字段
+    outputs: list[str]                 # 产出的指标名
+
+class LLMStep(BaseModel):
+    &quot;&quot;&quot;模型推理步骤 —— 只做归因、解读、建议，不做算数&quot;&quot;&quot;
+    type: Literal[&quot;llm&quot;] = &quot;llm&quot;
+    step_id: str
+    name: str                          # &quot;定位下滑环节并归因&quot;
+    instruction: str                   # 给模型的具体指令
+    inputs: list[str]                  # 依赖的上游产出（指标名或前序步骤 output）
+    outputs: list[str]
+
+AnalysisStep = MetricStep | LLMStep
+
+class SkillSpec(BaseModel):
+    # ===== 题目要求的 7 个字段 =====
+    name: str                              # ① Skill 名称
+    description: str                       # ② Skill 描述
+    use_cases: list[str]                   # ③ 使用场景
+    input_schema: list[InputField]         # ④ 输入数据定义
+    analysis_flow: list[AnalysisStep]      # ⑤ 分析流程
+    agent_prompt: str                      # ⑥ Agent Prompt
+    output_template: str                   # ⑦ 输出结果模板（Markdown + 占位符）
+
+    # ===== 治理所需的补充字段 =====
+    skill_id: str
+    version: str = &quot;1.0.0&quot;
+    status: Literal[&quot;draft&quot;, &quot;published&quot;, &quot;deprecated&quot;] = &quot;draft&quot;
+    domain: str                            # 业务域：电商/销售/增长/零售
+    owner: Optional[str] = None
+    metric_dictionary: dict[str, str] = {} # 指标口径显式定义
+    created_at: str
+    updated_at: str
+</code></pre>
+<p><strong>为什么 <code>analysis_flow</code> 要区分 <code>metric</code> 和 <code>llm</code> 两种步骤？</strong></p>
+<p>这是全套方案最关键的设计决策。详见第五节。</p>
+<hr />
+<h2>三、LLM 在系统中承担什么角色</h2>
+<p><strong>一句话：LLM 是"翻译官"和"分析师"，不是"计算器"和"裁判"。</strong></p>
+<table>
+<thead>
+<tr>
+<th>环节</th>
+<th>LLM 是否参与</th>
+<th>承担什么</th>
+<th>为什么这样划分</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>需求理解</strong></td>
+<td>✅ 主力</td>
+<td>把"帮我做个直播复盘 Skill"扩展成完整的业务理解：需要哪些数据、专家会怎么看</td>
+<td>这正是 LLM 的强项——把模糊需求映射到领域知识</td>
+</tr>
+<tr>
+<td><strong>Skill 结构化生成</strong></td>
+<td>✅ 主力</td>
+<td>输出符合 SkillSpec Schema 的 JSON</td>
+<td>用 structured output 强约束，把创造力限制在正确的形状里</td>
+</tr>
+<tr>
+<td><strong>生成自检</strong></td>
+<td>✅ 辅助</td>
+<td>对自己生成的 Skill 做批判性检查（self-critique）</td>
+<td>模型评价比模型生成更可靠，是低成本的质量提升</td>
+</tr>
+<tr>
+<td><strong>Schema 校验</strong></td>
+<td>❌</td>
+<td>——</td>
+<td>结构正确性是确定性问题，用代码判定，不能交给概率模型</td>
+</tr>
+<tr>
+<td><strong>指标数值计算</strong></td>
+<td>❌ <strong>绝对不参与</strong></td>
+<td>——</td>
+<td>LLM 算数不可靠，且不可复现。企业不会信任一个自己算出来的数字</td>
+</tr>
+<tr>
+<td><strong>异常环节定位</strong></td>
+<td>⚠️ 混合</td>
+<td>阈值判断走代码，业务解读走 LLM</td>
+<td>"转化率下降 15% 是否显著"是规则问题；"为什么会下降"是理解问题</td>
+</tr>
+<tr>
+<td><strong>归因分析</strong></td>
+<td>✅ 主力</td>
+<td>结合业务上下文解释指标变化的原因</td>
+<td>这是 LLM 不可替代的价值</td>
+</tr>
+<tr>
+<td><strong>行动建议生成</strong></td>
+<td>✅ 主力</td>
+<td>从行动建议库中匹配并具体化为可执行动作</td>
+<td>需要理解语境做个性化表达</td>
+</tr>
+<tr>
+<td><strong>报告文本组织</strong></td>
+<td>✅ 主力</td>
+<td>按 output_template 组织成人话</td>
+<td>——</td>
+</tr>
+<tr>
+<td><strong>最终结论审批</strong></td>
+<td>❌</td>
+<td>——</td>
+<td>高风险决策必须人在回路</td>
+</tr>
+</tbody>
+</table>
+<h3>3.1 LLM 网关抽象</h3>
+<pre><code class="language-python">class LLMGateway:
+    &quot;&quot;&quot;屏蔽模型差异，支持切换与降级&quot;&quot;&quot;
+
+    def generate_structured(
+        self,
+        system: str,
+        user: str,
+        schema: type[BaseModel],   # Pydantic 模型
+        max_retries: int = 2,
+    ) -&gt; BaseModel:
+        &quot;&quot;&quot;结构化输出：保证返回值符合 schema&quot;&quot;&quot;
+
+    def generate_text(self, system: str, user: str) -&gt; str:
+        &quot;&quot;&quot;自由文本输出：用于归因和建议&quot;&quot;&quot;
+</code></pre>
+<p>Demo 使用 Claude 的 <code>client.messages.parse()</code> + Pydantic 模型，由 API 层面保证 JSON 合法性；切换到其他模型时，网关内部改用 JSON mode + 手动校验重试即可，上层无感知。</p>
+<hr />
+<h2>四、如何生成 Skill（生成链路详解）</h2>
+<h3>4.1 完整流程</h3>
+<pre><code>用户输入：&quot;帮我创建一个抖音直播运营复盘 Skill&quot;
+    │
+    ▼
+【Step 1】意图解析
+    抽取三要素：业务域(电商-直播) / 分析对象(单场直播) / 分析目的(复盘归因)
+    → 用于检索对应的领域知识
+    │
+    ▼
+【Step 2】上下文组装
+    ├─ 领域指标字典（该业务域下允许使用的指标 + 标准口径）
+    ├─ 同域 few-shot 示例（1-2 个高质量 SkillSpec）
+    └─ 生成规范（角色设定 + 硬性约束）
+    │
+    ▼
+【Step 3】LLM 结构化生成
+    调用 messages.parse(output_config={&quot;format&quot;: SkillSpec_schema})
+    → 得到 SkillSpec 草稿
+    │
+    ▼
+【Step 4】四道校验闸  ← 见 5.1
+    任一不通过 → 带错误信息重试（最多 2 次）→ 仍失败则降级
+    │
+    ▼
+【Step 5】LLM 自检（self-critique）
+    换一个 prompt 让模型审查自己的产出：
+    &quot;这份 Skill 的分析流程能否用 input_schema 中的字段真正执行完？
+     有没有引用未定义的字段？指标口径是否明确无歧义？&quot;
+    → 发现问题则定向修正
+    │
+    ▼
+【Step 6】人工确认（不可跳过）
+    前端展示七个字段，创建者逐项校准：
+    - 输入字段：我们后台能导出这些吗？
+    - 指标口径：我们公司是这么算的吗？
+    - 分析流程：符合我的实际思路吗？
+    - 阈值：多少算异常？
+    │
+    ▼
+【Step 7】发布 → 存入资产库（v1.0.0, status=published）
+</code></pre>
+<h3>4.2 生成 Prompt 的关键设计</h3>
+<p><strong>System Prompt 骨架：</strong></p>
+<pre><code>你是企业经营分析领域的 Skill 架构师。你的任务是把业务专家的岗位经验，
+转换为一份结构化、可执行的 SkillSpec。
+
+【硬性约束】
+1. analysis_flow 中的每一个字段引用，必须在 input_schema 中已定义。
+   不允许出现&quot;凭空冒出来&quot;的字段。
+2. 所有涉及数值计算的步骤，type 必须为 &quot;metric&quot;，并给出明确的 formula。
+   不允许把计算写进 llm 步骤的 instruction 里。
+3. 只允许使用【指标字典】中已定义的指标。若业务确实需要新指标，
+   在 metric_dictionary 中显式给出口径定义。
+4. input_schema 中的每个字段必须给出 description（口径说明）和
+   source_hint（数据从哪导出），否则使用者无法准备数据。
+5. agent_prompt 必须包含【禁止事项】章节，至少包含：
+   - 不得自行计算任何数值，所有数字引用上游 metric 步骤的产出
+   - 数据不足时明确指出缺失项，不得臆测
+
+【分析流程的编写原则】
+按业务专家的真实思考路径组织，通常遵循：
+  测量（算出核心指标）→ 对比（与基准比）→ 定位（找到问题环节）
+  → 归因（解释为什么）→ 行动（给出怎么办）
+
+【可用指标字典】
+{metric_dictionary}
+
+【参考示例】
+{few_shot_examples}
+</code></pre>
+<p><strong>为什么强调这些约束？</strong> 因为不加约束时，LLM 最容易犯三个错：把计算塞进 Prompt 里让模型自己算、引用不存在的字段、指标口径含糊（"转化率"不说清楚是除以什么）。这三个错任何一个都会让 Skill 无法执行或结果不可信。</p>
+<h3>4.3 降级策略</h3>
+<table>
+<thead>
+<tr>
+<th>失败情形</th>
+<th>降级方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>结构化输出连续 2 次不合法</td>
+<td>切换为"分字段生成"：把七个字段拆成七次小请求，降低单次复杂度</td>
+</tr>
+<tr>
+<td>分字段仍失败</td>
+<td>返回同业务域模板 Skill + 提示用户手动编辑</td>
+</tr>
+<tr>
+<td>LLM 服务不可用</td>
+<td>直接返回模板库，功能降级但不中断</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>五、如何避免 AI 生成错误的 Skill</h2>
+<p><strong>这是本方案最重要的部分。防错不靠"让模型更聪明"，靠机制。</strong></p>
+<h3>5.1 四道校验闸（生成期）</h3>
+<pre><code>LLM 输出
+    │
+    ▼
+┌────────────────────────────────────────────────────┐
+│ 闸① 结构校验（Schema Validation）                  │
+│ Pydantic 强制校验：字段齐全？类型正确？枚举合法？   │
+│ 由 Claude structured output 在 API 层面先保证一道， │
+│ 本地 Pydantic 再校验一道                            │
+│ ✗ 不通过 → 带 ValidationError 信息重试              │
+└────────────────────────────────────────────────────┘
+    │
+    ▼
+┌────────────────────────────────────────────────────┐
+│ 闸② 逻辑闭环校验（Referential Integrity）           │
+│ · analysis_flow 每个 step 的 inputs，是否都能在     │
+│   input_schema 或前序 step 的 outputs 中找到？      │
+│ · output_template 的每个占位符，是否都有 step 产出？ │
+│ · 是否存在孤立步骤（产出无人使用）？                 │
+│ · 是否存在循环依赖？                                │
+│ ✗ 不通过 → 精确报错&quot;Step3 引用了未定义字段：退款额&quot;  │
+└────────────────────────────────────────────────────┘
+    │
+    ▼
+┌────────────────────────────────────────────────────┐
+│ 闸③ 领域规则校验（Domain Rules）                    │
+│ · 用到的指标是否在指标字典白名单内？                 │
+│ · 若是新指标，metric_dictionary 中是否给了明确口径？  │
+│ · formula 是否语法可解析（能被计算引擎执行）？        │
+│ · agent_prompt 是否包含必需的禁止事项？              │
+│ ✗ 不通过 → 拦截并标注具体违规项                     │
+└────────────────────────────────────────────────────┘
+    │
+    ▼
+┌────────────────────────────────────────────────────┐
+│ 闸④ 可执行性校验（Smoke Test）                      │
+│ 用一份按 input_schema 自动生成的 mock 数据，         │
+│ 真实跑一遍 analysis_flow                            │
+│ · metric 步骤能否算出结果（不报错、不除零）？        │
+│ · llm 步骤能否拿到它声明的输入？                     │
+│ · 报告能否完整渲染？                                │
+│ ✗ 不通过 → 定位到失败步骤并报错                     │
+└────────────────────────────────────────────────────┘
+    │
+    ▼
+✓ 全部通过 → 进入人工确认环节
+</code></pre>
+<h3>5.2 结构性防错设计</h3>
+<p>除了校验闸，架构本身就在防错：</p>
+<p><strong>① 指标字典白名单 —— 禁止 LLM 自创口径</strong></p>
+<pre><code class="language-yaml"># knowledge/metric_dictionary.yaml
+电商直播:
+  进入率:
+    formula: &quot;进入直播间人数 / 曝光人数&quot;
+    unit: &quot;%&quot;
+    healthy_range: [0.05, 0.20]
+    description: &quot;衡量直播间封面和标题的吸引力&quot;
+  商品点击率:
+    formula: &quot;商品点击人数 / 进入直播间人数&quot;
+    unit: &quot;%&quot;
+    healthy_range: [0.10, 0.35]
+  成交转化率:
+    formula: &quot;成交订单数 / 商品点击人数&quot;
+    unit: &quot;%&quot;
+    note: &quot;注意：本口径为点击成交率，非全场转化率&quot;
+  UV价值:
+    formula: &quot;GMV / 进入直播间人数&quot;
+    unit: &quot;元&quot;
+</code></pre>
+<p>企业内部最容易吵架的就是口径。把口径抽出来做成独立的、可治理的白名单，LLM 只能引用不能发明，这从源头消灭了"AI 算的转化率和我算的不一样"这类争议。</p>
+<p><strong>② 数值与语言分离 —— 从架构上消灭数字幻觉</strong></p>
+<p>这是最核心的设计：</p>
+<pre><code>❌ 错误做法（大多数&quot;套壳&quot;方案）
+   把整张 CSV 和一段 Prompt 全部塞给 LLM，让它&quot;分析一下&quot;
+   → 数字是模型生成的，可能算错、可能编造，且不可复现
+
+✅ 本方案
+   metric 步骤 → pandas 确定性计算 → 得到一份【指标结果表】
+   llm 步骤    → 只接收【指标结果表】，不接触原始数据
+              → 指令中明确&quot;你不需要也不允许计算任何数字，
+                 所有数值必须直接引用给你的结果表&quot;
+   → 数字 100% 正确且可复现，模型只负责&quot;解释&quot;和&quot;建议&quot;
+</code></pre>
+<p><strong>③ 人在回路（Human-in-the-loop）</strong></p>
+<p>生成后必须经过创建者确认才能发布。这不是"AI 不够强"的妥协，而是企业级产品的必要设计——责任必须有人承担。</p>
+<p><strong>④ 版本化与灰度</strong></p>
+<ul>
+<li>已发布版本不可直接编辑，改动必产生新版本</li>
+<li>新版本可先小范围灰度，观察评测分和用户反馈后再全量</li>
+<li>出问题一键回滚到上一版本</li>
+</ul>
+<h3>5.3 执行期防错</h3>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>输入数据校验</strong></td>
+<td>必填字段缺失 → 拦截执行并列出缺失清单；类型不符 → 报错；数值异常（转化率 &gt; 100%、负数 GMV）→ 警告并标注</td>
+</tr>
+<tr>
+<td><strong>计算异常防护</strong></td>
+<td>除零保护、空值处理、样本量不足时跳过对比类步骤并在报告中明确标注</td>
+</tr>
+<tr>
+<td><strong>数字幻觉检测</strong></td>
+<td>用正则扫描 LLM 输出中的所有数字，与上游 metric 结果集比对；出现结果集中不存在的数字 → 判定幻觉 → 重试；连续失败则在报告中标红提示</td>
+</tr>
+<tr>
+<td><strong>溯源信息保留</strong></td>
+<td>每个指标记录 <code>{值, 公式, 依赖字段, 源数据行数}</code>，前端可点开查看</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>六、如何实现 Skill 执行</h2>
+<h3>6.1 执行流程</h3>
+<pre><code>用户选择 Skill + 上传 CSV
+    │
+    ▼
+【1】数据加载
+    pandas.read_csv() → DataFrame
+    │
+    ▼
+【2】字段映射
+    自动模糊匹配 CSV 列名 ↔ input_schema 字段名
+    （&quot;曝光人数&quot; ↔ &quot;曝光量&quot; ↔ &quot;impressions&quot;）
+    → 展示映射结果供用户确认/调整
+    │
+    ▼
+【3】input_schema 校验
+    ├─ 必填字段缺失 → 中断，返回缺失清单 + source_hint 提示
+    ├─ 类型不符 → 尝试转换，失败则报错
+    └─ 异常值 → 记录 warning，继续执行
+    │
+    ▼
+【4】流程编排（orchestrator）
+    构建 DAG，按依赖顺序执行 analysis_flow：
+
+    context = {&quot;raw_data&quot;: df, &quot;metrics&quot;: {}, &quot;llm_outputs&quot;: {}}
+
+    for step in analysis_flow:
+        if step.type == &quot;metric&quot;:
+            result = MetricEngine.execute(step.formula, context)
+            context[&quot;metrics&quot;][step.outputs] = result
+            # 同时记录溯源信息
+
+        elif step.type == &quot;llm&quot;:
+            # ★ 只传指标结果，不传原始数据
+            payload = extract(context, step.inputs)
+            result = llm.generate_text(
+                system=skill.agent_prompt,
+                user=render(step.instruction, payload)
+            )
+            hallucination_check(result, context[&quot;metrics&quot;])  # 幻觉检测
+            context[&quot;llm_outputs&quot;][step.outputs] = result
+    │
+    ▼
+【5】报告渲染
+    按 output_template 填充占位符 → Markdown
+    数值部分附带溯源标记，前端可展开查看计算过程
+    │
+    ▼
+【6】持久化执行记录
+    存入 execution_log：skill_id, version, 输入数据摘要,
+    各步骤耗时, token 消耗, 结果, 用户反馈
+</code></pre>
+<h3>6.2 指标计算引擎</h3>
+<p>安全地执行 <code>formula</code> 字符串是个关键点。<strong>不能用 <code>eval()</code></strong>（任意代码执行风险）。</p>
+<p>方案：受限表达式解析器</p>
+<pre><code class="language-python">class MetricEngine:
+    &quot;&quot;&quot;
+    只支持四则运算、比较、聚合函数的受限求值器。
+    基于 Python ast 模块解析表达式树，白名单节点类型。
+    &quot;&quot;&quot;
+    ALLOWED_FUNCS = {&quot;sum&quot;, &quot;mean&quot;, &quot;max&quot;, &quot;min&quot;, &quot;count&quot;, &quot;abs&quot;, &quot;round&quot;}
+    ALLOWED_NODES = (ast.Expression, ast.BinOp, ast.Num, ast.Name,
+                     ast.Call, ast.Compare, ast.Constant, ...)
+
+    def execute(self, formula: str, context: dict) -&gt; MetricResult:
+        tree = ast.parse(formula, mode=&quot;eval&quot;)
+        self._validate_nodes(tree)      # 白名单校验，遇到非法节点直接拒绝
+        value = self._eval(tree, context)
+        return MetricResult(
+            value=value,
+            formula=formula,
+            depends_on=self._extract_names(tree),
+            row_count=len(context[&quot;raw_data&quot;]),
+        )
+</code></pre>
+<h3>6.3 关键实现细节</h3>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CSV 编码/分隔符不确定</td>
+<td><code>chardet</code> 探测编码，尝试多种分隔符</td>
+</tr>
+<tr>
+<td>数值列含千分位、百分号、货币符号</td>
+<td>预处理清洗后转 float</td>
+</tr>
+<tr>
+<td>单行数据 vs 多行数据</td>
+<td>Skill 声明 <code>granularity</code>（单次/时序），编排器按声明选择聚合方式</td>
+</tr>
+<tr>
+<td>LLM 调用超时</td>
+<td>设置 timeout + 重试；步骤级失败不中断全流程，在报告中标注该章节失败</td>
+</tr>
+<tr>
+<td>长报告的 token 成本</td>
+<td>metric 结果已高度压缩（几十个数字），llm 步骤输入很小，成本可控</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>七、如何实现 Skill 评估</h2>
+<h3>7.1 三层评估体系</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>时机</th>
+<th>方式</th>
+<th>判定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>L1 生成期</strong></td>
+<td>Skill 创建时</td>
+<td>四道校验闸（见 5.1）</td>
+<td>自动，硬门槛，不通过不能保存</td>
+</tr>
+<tr>
+<td><strong>L2 执行期</strong></td>
+<td>每次运行</td>
+<td>输入校验 + 幻觉检测 + 溯源完整性</td>
+<td>自动，实时</td>
+</tr>
+<tr>
+<td><strong>L3 结果期</strong></td>
+<td>发布前 + 周期性</td>
+<td>黄金评测集回归 + 五维评分卡 + 专家盲评</td>
+<td>半自动，决定能否发布/是否下架</td>
+</tr>
+</tbody>
+</table>
+<h3>7.2 黄金评测集（Golden Set）</h3>
+<p>这是让 Skill 从"能跑"变成"可信"的关键。</p>
+<pre><code>tests/golden_set/
+└── douyin_live_review/
+    ├── case_01_traffic_drop/
+    │   ├── input.csv              # 一场真实的流量下滑直播数据
+    │   ├── expected.yaml          # 专家标注的标准答案
+    │   └── metrics_truth.json     # 人工核算的正确指标值
+    ├── case_02_conversion_drop/
+    ├── case_03_normal/            # 正常场次，检验是否会误报
+    └── case_04_missing_data/      # 数据缺失，检验降级行为
+</code></pre>
+<p><code>expected.yaml</code> 示例：</p>
+<pre><code class="language-yaml">expected_metrics:          # 硬指标，必须完全一致
+  进入率: 0.082
+  商品点击率: 0.156
+  成交转化率: 0.043
+expected_diagnosis:        # 关键结论，必须命中
+  bottleneck_stage: &quot;流量层&quot;
+  root_cause_keywords: [&quot;自然流量下滑&quot;, &quot;推荐权重&quot;, &quot;封面点击率&quot;]
+expected_actions:          # 建议方向，命中 ≥ 2 条即通过
+  - &quot;优化直播间封面与标题&quot;
+  - &quot;检查违规扣分情况&quot;
+  - &quot;调整开播时段&quot;
+must_not_contain:          # 反例，出现即判失败
+  - &quot;建议提升转化率&quot;       # 空话，无可执行性
+</code></pre>
+<h3>7.3 自动评分实现</h3>
+<pre><code class="language-python">def evaluate(skill: SkillSpec, case: GoldenCase) -&gt; ScoreCard:
+    report = execute_skill(skill, case.input_csv)
+
+    return ScoreCard(
+        # 30% —— 完全自动，数值精确比对
+        data_accuracy = exact_match(
+            report.metrics, case.expected_metrics, tol=1e-6
+        ),
+        # 25% —— 半自动，用 LLM-as-judge 判断结论是否等价
+        attribution = llm_judge(
+            report.diagnosis, case.expected_diagnosis
+        ),
+        # 25% —— 半自动，关键词命中 + LLM 判断可执行性
+        actionability = keyword_hit(report.actions, case.expected_actions)
+                        * llm_judge_actionable(report.actions),
+        # 10% —— 完全自动
+        completeness = template_conformance(report, skill.output_template),
+        # 10% —— LLM-as-judge
+        clarity = llm_judge_clarity(report),
+    )
+</code></pre>
+<p><strong>发布门槛：加权总分 ≥ 80，且 <code>data_accuracy</code> ≥ 95。</strong><br />
+数据准确性一票否决——数字错了，其他维度再高也没有意义。</p>
+<h3>7.4 回归测试</h3>
+<p>每次 Skill 修改（产生新版本）时自动触发：</p>
+<pre><code>新版本 v1.1.0 提交
+    ↓
+跑完整 Golden Set
+    ↓
+与 v1.0.0 的分数对比
+    ├─ 总分提升 → 允许发布
+    ├─ 总分持平 → 提示&quot;无明显改进，确认发布？&quot;
+    └─ 总分下降 → 拦截发布，展示退化的具体 case
+</code></pre>
+<p>这套机制让 Skill 的迭代变成工程化的、可度量的过程，而不是"改了 Prompt 感觉好像好点了"。</p>
+<h3>7.5 线上持续评估</h3>
+<table>
+<thead>
+<tr>
+<th>信号</th>
+<th>采集方式</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>用户评分</td>
+<td>报告页 👍/👎 + 可选理由</td>
+<td>直接质量信号</td>
+</tr>
+<tr>
+<td><strong>人工修正率</strong></td>
+<td>对比用户导出前后的报告 diff</td>
+<td>最真实的质量信号——改得越多说明越不好用</td>
+</tr>
+<tr>
+<td>执行成功率</td>
+<td>执行日志统计</td>
+<td>区分是 Skill 问题还是数据问题</td>
+</tr>
+<tr>
+<td>复用率</td>
+<td>同用户 30 天内重复使用比例</td>
+<td>判断是否真的解决了问题</td>
+</tr>
+</tbody>
+</table>
+<p>低分 Skill 自动进入 Owner 待办队列，触发优化或归档。</p>
+<hr />
+<h2>八、Demo 实现范围与验收</h2>
+<h3>8.1 Demo 交付清单</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>实现内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SkillSpec Schema</td>
+<td>完整 Pydantic 模型</td>
+</tr>
+<tr>
+<td>生成链路</td>
+<td>自然语言输入 → LLM 结构化生成 → 四道校验闸 → 前端展示</td>
+</tr>
+<tr>
+<td>Skill 配置展示</td>
+<td>七字段可视化，关键字段可编辑</td>
+</tr>
+<tr>
+<td>Skill 资产库</td>
+<td>SQLite 存储，含 3 个预置 Skill + 版本号</td>
+</tr>
+<tr>
+<td>执行链路</td>
+<td>CSV 上传 → 字段映射 → 校验 → metric 计算 → llm 归因 → 报告渲染</td>
+</tr>
+<tr>
+<td>幻觉检测</td>
+<td>数字比对，异常标红</td>
+</tr>
+<tr>
+<td>溯源展示</td>
+<td>报告中数值可点开查看公式与依赖</td>
+</tr>
+<tr>
+<td>评测</td>
+<td>至少 1 个 Skill 配 3 组 Golden Case，可一键跑评分</td>
+</tr>
+</tbody>
+</table>
+<h3>8.2 三个预置 Skill</h3>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>业务域</th>
+<th>演示重点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>抖音直播运营复盘</td>
+<td>电商直播</td>
+<td>完整漏斗分析，展示 metric/llm 分离</td>
+</tr>
+<tr>
+<td>销售漏斗健康度诊断</td>
+<td>销售</td>
+<td>时序对比，展示基准期逻辑</td>
+</tr>
+<tr>
+<td>电商 GMV 波动归因</td>
+<td>电商</td>
+<td>多维拆解，展示复杂 analysis_flow</td>
+</tr>
+</tbody>
+</table>
+<h3>8.3 演示脚本（3 分钟讲清价值）</h3>
+<ol>
+<li>输入"帮我创建一个抖音直播运营复盘 Skill" → 展示生成过程与七字段结果</li>
+<li><strong>故意展示校验拦截</strong>：手动把 analysis_flow 改成引用一个不存在的字段 → 系统精确报错</li>
+<li>上传示例 CSV → 展示字段映射与校验</li>
+<li>执行 → 展示报告，<strong>点开某个数字看溯源</strong>（这是最有说服力的一幕）</li>
+<li>展示 Golden Set 评分结果</li>
+<li>展示版本管理与资产库</li>
+</ol>
+<hr />
+<h2>九、技术风险与应对</h2>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>应对</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LLM 结构化输出不稳定</td>
+<td>Claude structured output + Pydantic 双重保障 + 重试 + 分字段降级</td>
+</tr>
+<tr>
+<td><code>formula</code> 字符串执行的安全风险</td>
+<td>ast 白名单解析，禁用 <code>eval</code>/<code>exec</code></td>
+</tr>
+<tr>
+<td>用户 CSV 格式千奇百怪</td>
+<td>编码探测 + 分隔符探测 + 字段模糊匹配 + 人工确认映射界面</td>
+</tr>
+<tr>
+<td>LLM 成本失控</td>
+<td>metric 结果高度压缩后再传给 LLM；指标字典和 few-shot 用 prompt caching</td>
+</tr>
+<tr>
+<td>单一模型供应商依赖</td>
+<td>LLM 网关抽象层，配置切换；确定性计算部分完全不依赖模型</td>
+</tr>
+<tr>
+<td>Demo 环境无 API Key 时无法演示</td>
+<td>内置 mock 模式：预置生成结果与执行结果，无 Key 也能跑通全流程演示</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="section">
+  <div class="section-label">第 三 部分 · 面试问题回答</div>
+  <h1>面试问题回答</h1>
+<blockquote>
+<p>对应题目第六部分 ｜ 关联文档：《01_产品设计文档 PRD》《02_技术方案说明》</p>
+</blockquote>
+<hr />
+<h2>Q1. 为什么企业需要 Skill，而不是直接使用 ChatGPT？</h2>
+<p><strong>因为 ChatGPT 解决的是"个人能力放大"，而企业需要的是"组织能力沉淀"。这是两个不同层次的问题。</strong></p>
+<p>ChatGPT 让一个人变强，但它不会让组织变强——因为每个人的用法都不一样，而且这些用法留不下来。</p>
+<h3>具体拆开说，企业场景下缺了五样东西</h3>
+<p><strong>① 缺一致性——结果不可复现</strong></p>
+<p>同一个问题，A 用 ChatGPT 问和 B 问，得到的分析框架不一样；今天问和明天问，结论可能也不一样。这在闲聊场景无所谓，但在经营分析场景是致命的——老板不可能接受"上周说是流量问题，这周同样的数据说是转化问题"。</p>
+<p>企业需要的是：<strong>同样的数据，任何人、任何时候执行，得到同样口径下的同样结论。</strong></p>
+<p><strong>② 缺数据契约——不知道该喂什么</strong></p>
+<p>ChatGPT 是"你给什么它分析什么"。但一线员工恰恰不知道该看哪些数据——这本身就是专家经验的一部分。Skill 的 <code>input_schema</code> 把"分析这件事需要哪 12 个字段、每个字段什么口径、从后台哪个页面导出"固化下来，这是 ChatGPT 天然给不了的。</p>
+<p><strong>③ 缺数值可信度——数字是编的</strong></p>
+<p>把一张 CSV 丢给 ChatGPT 让它算转化率，它会给你一个数——但这个数是模型"生成"出来的，不是"算"出来的。它可能对，可能错，而且你无法验证、无法复现。企业拿这种数字做决策是不可接受的。</p>
+<p>Skill 的做法是：数值走确定性代码，模型只做解读。</p>
+<p><strong>④ 缺资产化——经验留不下来</strong></p>
+<p>用 ChatGPT 的过程发生在个人的聊天记录里。人走了，聊天记录也带走了；就算留下，也没人知道哪条对话是有价值的。Skill 是有归属人、有版本、有评测分、可被检索和授权的<strong>资产</strong>，它进的是公司的资产库而不是个人的聊天框。</p>
+<p><strong>⑤ 缺治理——不敢用、不可审计</strong></p>
+<p>企业级 AI 要回答的问题是：谁能用？用了什么数据？结论怎么来的？出错了怎么回滚？谁负责？</p>
+<p>这些 ChatGPT 一个都答不了。Skill 平台通过权限、版本、执行日志、溯源信息把这些补齐。</p>
+<h3>总结</h3>
+<blockquote>
+<p>ChatGPT 是给个人的通用工具，Skill 是组织的专用资产。<br />
+企业买的不是"能对话的 AI"，是"能被管理、能被信任、能被复用的分析能力"。</p>
+</blockquote>
+<h3>补充：那 ChatGPT 在这个方案里是什么角色？</h3>
+<p>不是竞争关系。<strong>大模型是 Skill 平台的底层能力供应商</strong>——我们用它来做需求理解、结构化生成、归因分析。它是发动机，Skill 平台是整车。企业买的是车，不是发动机。</p>
+<hr />
+<h2>Q2. 你认为一个企业岗位 Skill 最重要的组成部分是什么？</h2>
+<p><strong>如果只能保留一个，我选「分析流程」（<code>analysis_flow</code>）。</strong></p>
+<p>理由：<strong>其他六个字段描述的是"这个 Skill 是什么"，只有分析流程描述的是"专家是怎么想的"。而后者才是真正稀缺的、不可替代的岗位经验。</strong></p>
+<h3>为什么是它</h3>
+<p>名称、描述、使用场景——这些是元数据，任何人花五分钟都能写。<br />
+Agent Prompt、输出模板——这些是表达层，可以复用通用模板。<br />
+输入数据定义——重要，但它其实是分析流程的<strong>衍生结果</strong>：因为流程里要算进入率，所以才需要曝光人数和进入人数这两个字段。</p>
+<p><strong>只有分析流程，编码了专家真正的思考路径：</strong></p>
+<ul>
+<li><strong>先看什么、后看什么</strong>——为什么先看流量再看转化，而不是反过来？因为漏斗有先后，上游没问题才轮得到下游</li>
+<li><strong>怎么判断异常</strong>——降 5% 是正常波动还是要报警？这个阈值是专家用三年经验试出来的</li>
+<li><strong>发现问题后往哪个方向拆</strong>——流量掉了，是拆渠道还是拆时段？专家知道哪个方向的信息量更大</li>
+<li><strong>不同结论对应什么动作</strong>——这是从"分析"到"经营"的最后一公里，也是最值钱的一段</li>
+</ul>
+<p><strong>新人和专家的差距，从来不在"会不会算转化率"，而在"该看哪个转化率、看完之后怎么办"。</strong> 这个差距就装在分析流程里。</p>
+<h3>但我想补充一个观点</h3>
+<p><strong>如果问"最重要的",答案是分析流程；如果问"最容易被低估的",我的答案是「输入数据定义」（<code>input_schema</code>）。</strong></p>
+<p>因为它是<strong>决定 Skill 能不能真正落地的那个字段</strong>。</p>
+<p>分析流程再精妙，如果它要求的数据企业根本导不出来，这个 Skill 就是废的。我在设计 <code>input_schema</code> 时特意加了 <code>source_hint</code> 字段（"从抖音罗盘-直播分析-流量看板导出"），就是因为：<strong>很多 AI 产品死在"用户不知道该给什么数据"这一步，而不是死在分析能力不够。</strong></p>
+<p>一个不能被执行的完美 Skill，价值是零。</p>
+<h3>总结</h3>
+<blockquote>
+<p>分析流程是 Skill 的灵魂，输入数据定义是 Skill 的地基。<br />
+前者决定它有多聪明，后者决定它能不能站起来。</p>
+</blockquote>
+<hr />
+<h2>Q3. 如果让你设计一个"销售分析 AI 员工"，需要采集哪些专家经验？</h2>
+<p><strong>我会把采集工作结构化成五类，因为专家的经验不是一团模糊的"感觉",而是可以被拆解的五种确定的东西。</strong></p>
+<p>采集方式：<strong>不问"你有什么经验"（他答不上来），而是拿三个真实案例让他复盘——一个业绩达标的月份、一个业绩崩了的月份、一个数据看起来正常但他觉得有问题的月份。让他边看边说，我在旁边记录他每一次"为什么看这个"。</strong></p>
+<h3>五类经验</h3>
+<h4>第一类：指标体系与口径（Metrics）</h4>
+<p>这是地基，也是最容易在企业内部吵架的地方。</p>
+<table>
+<thead>
+<tr>
+<th>要采集的</th>
+<th>具体问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心结果指标</td>
+<td>你判断一个销售/团队好不好，第一眼看哪三个数？</td>
+</tr>
+<tr>
+<td>过程指标</td>
+<td>结果出来之前，哪些先行指标能预警？（新增商机数、跟进频次、关键节点推进速度）</td>
+</tr>
+<tr>
+<td><strong>口径细节</strong></td>
+<td>"成单"是签合同算还是回款算？"商机"从哪个阶段开始算？跨月的订单算哪个月？</td>
+</tr>
+<tr>
+<td>效率指标</td>
+<td>人均产能、单均金额、销售周期长度、获客成本</td>
+</tr>
+<tr>
+<td>健康度指标</td>
+<td>漏斗各阶段转化率、商机停留时长、赢单率、流失率</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>这里最关键的是口径。</strong> 我见过太多"数据打架"的场景，本质都是口径不统一。所以在我的方案里，指标口径被抽成独立的 <code>metric_dictionary</code> 白名单，先统一口径，再建 Skill。</p>
+</blockquote>
+<h4>第二类：分析路径与归因树（Diagnosis Logic）</h4>
+<p>这是最核心、也最难采集的部分——专家的思考顺序。</p>
+<p><strong>采集方法：让他对着一个"业绩掉了 30%"的案例，把每一步判断说出来。</strong></p>
+<p>典型的销售分析归因树长这样：</p>
+<pre><code>业绩未达标
+├─ 【第一刀】是量的问题还是质的问题？
+│   ├─ 商机总量不足 → 往「获客侧」拆
+│   │   ├─ 线索量少 → 市场投放？渠道质量？
+│   │   ├─ 线索有但转商机少 → 线索质量？跟进速度？
+│   │   └─ 销售人力不足 → 编制？离职率？新人爬坡期？
+│   │
+│   └─ 商机够但转化差 → 往「转化侧」拆
+│       ├─ 卡在哪个阶段？（初访/方案/报价/谈判）
+│       │   ├─ 卡在方案阶段 → 需求把握不准？产品匹配度？
+│       │   ├─ 卡在报价阶段 → 价格竞争力？折扣权限？
+│       │   └─ 卡在谈判阶段 → 决策链没打通？竞对介入？
+│       └─ 销售周期是否被拉长？→ 客户预算冻结？决策流程变化？
+│
+├─ 【第二刀】是结构问题还是普遍问题？
+│   ├─ 集中在少数人 → 个人能力/状态问题 → 辅导或调整
+│   ├─ 集中在某个区域/行业 → 市场环境问题 → 策略调整
+│   └─ 全员普遍下滑 → 产品/价格/竞争格局问题 → 上升到管理层
+│
+└─ 【第三刀】是短期波动还是趋势变化？
+    ├─ 对比同期、环比、近 3 个月趋势
+    └─ 剔除季节性因素、大单偶然性因素
+</code></pre>
+<p><strong>要问的关键问题：</strong><br />
+- 你为什么先看量再看质，而不是反过来？<br />
+- 什么情况下你会跳过某一步？<br />
+- 有没有哪次你按这个路径判断错了？错在哪？</p>
+<h4>第三类：阈值与基准（Thresholds &amp; Benchmarks）</h4>
+<p>专家脑子里有一套"什么算正常"的标尺，新人没有。</p>
+<table>
+<thead>
+<tr>
+<th>要采集的</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>正常波动范围</td>
+<td>月度业绩上下浮动多少以内不用管？（比如 ±15%）</td>
+</tr>
+<tr>
+<td>报警线</td>
+<td>赢单率低于多少必须介入？商机停留超过几天算卡住？</td>
+</tr>
+<tr>
+<td>分层基准</td>
+<td>新人（&lt;3个月）/ 成熟销售 / Top Sales 的指标基准分别是多少？</td>
+</tr>
+<tr>
+<td>行业/区域差异</td>
+<td>不同行业客户的销售周期基准差多少？</td>
+</tr>
+<tr>
+<td>季节性规律</td>
+<td>哪几个月天然是淡季？春节前后怎么调整预期？</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>阈值是最容易被忽略但最能体现专业度的部分。<strong>没有阈值的分析只能说"下降了 12%"，有阈值的分析才能说"下降 12% 已超出正常波动范围，需要介入"。</strong></p>
+</blockquote>
+<h4>第四类：行动建议库（Action Library）</h4>
+<p>从"分析"到"经营"的最后一公里。这是让 AI 员工从"分析师"变成"顾问"的关键。</p>
+<p>采集格式：<strong>归因结论 → 对应动作 → 责任人 → 预期效果 → 见效周期</strong></p>
+<table>
+<thead>
+<tr>
+<th>归因结论</th>
+<th>建议动作</th>
+<th>责任人</th>
+<th>预期效果</th>
+<th>周期</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>线索转商机率低于基准</td>
+<td>检查线索响应时长；建立 2 小时首响机制</td>
+<td>销售主管</td>
+<td>转化率 +5~8pt</td>
+<td>2 周</td>
+</tr>
+<tr>
+<td>商机集中卡在报价阶段</td>
+<td>复盘近 20 个流失单的报价与竞对价差；评估折扣权限下放</td>
+<td>销售负责人</td>
+<td>报价阶段通过率提升</td>
+<td>1 个月</td>
+</tr>
+<tr>
+<td>单个销售业绩连续 2 月低于团队均值 50%</td>
+<td>一对一复盘其在手商机；判断是能力问题还是分配问题</td>
+<td>直属主管</td>
+<td>——</td>
+<td>1 周</td>
+</tr>
+<tr>
+<td>某行业赢单率显著低于其他行业</td>
+<td>评估该行业产品匹配度；考虑调整资源投放优先级</td>
+<td>销售负责人 + 产品</td>
+<td>——</td>
+<td>1 个季度</td>
+</tr>
+</tbody>
+</table>
+<p><strong>采集时必须追问的：</strong> "如果是这个原因，你会让谁去做什么？"——很多专家能诊断但说不出动作，要逼他具体到人和动作。</p>
+<h4>第五类：陷阱与例外（Pitfalls）</h4>
+<p>这一类最容易被忽略，但它是区分"AI 看起来专业"和"AI 真的专业"的地方。</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>数据陷阱</strong></td>
+<td>大单会严重扭曲人均值，要看中位数；CRM 里"已赢单"可能只是销售提前标记的</td>
+</tr>
+<tr>
+<td><strong>归因陷阱</strong></td>
+<td>业绩下滑正好赶上系统迁移导致数据缺失，不是真的下滑</td>
+</tr>
+<tr>
+<td><strong>时间陷阱</strong></td>
+<td>长周期业务的当月业绩反映的是 3 个月前的动作，不能用当月动作解释当月业绩</td>
+</tr>
+<tr>
+<td><strong>幸存者偏差</strong></td>
+<td>只分析成单客户的特征，会漏掉那些同样有这些特征但没成单的</td>
+</tr>
+<tr>
+<td><strong>组织例外</strong></td>
+<td>新人前 3 个月不参与排名；战略客户不看短期 ROI</td>
+</tr>
+</tbody>
+</table>
+<p><strong>采集问题：</strong> "有没有哪次数据看起来很清楚，但结论其实是错的？"</p>
+<h3>采集方法论：从访谈到 Skill</h3>
+<pre><code>【1】案例复盘访谈（2-3 小时 × 2 位专家）
+    准备三个真实案例（好/坏/看似正常但有问题）
+    让专家边看边说，全程录音
+    重点记录每一次&quot;为什么看这个&quot;和&quot;这个数说明什么&quot;
+        ↓
+【2】结构化拆解
+    把录音内容归入上述五类
+    对模糊表述追问到可判定（&quot;感觉不太对&quot; → &quot;低于多少算不对&quot;）
+        ↓
+【3】交叉验证
+    找第二位专家审阅第一位的产出
+    分歧点单独讨论——分歧往往暴露了口径不统一
+        ↓
+【4】转写为 SkillSpec
+    指标体系 → input_schema + metric_dictionary
+    归因树   → analysis_flow
+    阈值     → metric 步骤的判定逻辑
+    行动库   → llm 步骤的知识注入
+    陷阱     → agent_prompt 的【禁止事项】和【注意事项】
+        ↓
+【5】盲测校准
+    拿 5 个专家没见过的历史案例跑 Skill
+    对比 AI 结论与专家结论 → 差异点回炉修正
+    这 5 个案例同时成为 Golden Set
+</code></pre>
+<h3>总结</h3>
+<blockquote>
+<p>采集专家经验的难点不是"他不愿意说",而是"他说不清楚"——因为那些判断对他已经是肌肉记忆。<br />
+所以不能用访谈问卷，要用<strong>案例复盘 + 追问到可判定</strong>。<br />
+判断采集是否到位的标准只有一个：<strong>这套东西能不能让一个新人做出和专家一样的判断。</strong></p>
+</blockquote>
+<hr />
+<h2>Q4. 如何判断 AI 生成的 Skill 是否达到企业使用标准？</h2>
+<p><strong>不能靠"看起来对不对"来判断。我设计了一套三层验证 + 五维评分卡的体系，每一层解决不同的问题。</strong></p>
+<h3>三层验证：从"能跑"到"跑得对"到"跑得有用"</h3>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>解决什么问题</th>
+<th>时机</th>
+<th>方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>L1 结构可用</strong></td>
+<td>这个 Skill 在技术上能不能跑起来</td>
+<td>生成时</td>
+<td>全自动，硬门槛</td>
+</tr>
+<tr>
+<td><strong>L2 结果正确</strong></td>
+<td>跑出来的数字对不对、有没有幻觉</td>
+<td>每次执行</td>
+<td>全自动，实时</td>
+</tr>
+<tr>
+<td><strong>L3 业务有效</strong></td>
+<td>跑出来的结论有没有用</td>
+<td>发布前 + 周期性</td>
+<td>半自动 + 专家</td>
+</tr>
+</tbody>
+</table>
+<h4>L1 结构可用性验证（四道校验闸）</h4>
+<table>
+<thead>
+<tr>
+<th>闸</th>
+<th>检查什么</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 结构校验</td>
+<td>七字段齐全？类型正确？</td>
+<td>Pydantic Schema 强制校验</td>
+</tr>
+<tr>
+<td>② 逻辑闭环</td>
+<td>流程里引用的字段是否都已定义？输出模板的占位符是否都有产出？</td>
+<td>拦截"Step3 引用了未定义字段：退款金额"</td>
+</tr>
+<tr>
+<td>③ 领域规则</td>
+<td>指标是否在白名单内？口径是否明确？公式是否可解析？</td>
+<td>拦截 LLM 自创的"用户满意度指数"</td>
+</tr>
+<tr>
+<td>④ 冒烟测试</td>
+<td>用 mock 数据能否真的跑通全流程？</td>
+<td>拦截除零、类型错误等运行时问题</td>
+</tr>
+</tbody>
+</table>
+<p><strong>任一不通过，Skill 不允许保存。</strong> 这一层是纯工程问题，必须 100% 自动化。</p>
+<h4>L2 结果正确性验证</h4>
+<table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输入数据合法性</td>
+<td>必填字段、类型、异常值（转化率 &gt; 100%、负数 GMV）</td>
+</tr>
+<tr>
+<td>计算正确性</td>
+<td>metric 步骤走确定性代码，天然可复现——这一项在架构上就保证了</td>
+</tr>
+<tr>
+<td><strong>数字幻觉检测</strong></td>
+<td>扫描 LLM 输出中的所有数字，与上游计算结果比对；<strong>出现结果集中不存在的数字即判定幻觉，拦截重试</strong></td>
+</tr>
+<tr>
+<td>溯源完整性</td>
+<td>每个数字能否追溯到公式和源数据行</td>
+</tr>
+</tbody>
+</table>
+<h4>L3 业务有效性验证</h4>
+<p><strong>核心工具：黄金评测集（Golden Set）</strong></p>
+<p>每个 Skill 配 5-10 组「历史真实数据 + 专家标注的标准答案」，覆盖四类场景：<br />
+- 典型问题场景（如流量下滑）<br />
+- 另一类典型问题（如转化下滑）<br />
+- <strong>正常场景</strong>（检验会不会误报）<br />
+- <strong>数据缺失场景</strong>（检验降级行为是否正确）</p>
+<pre><code class="language-yaml"># 标准答案示例
+expected_metrics:          # 硬指标，必须完全一致
+  进入率: 0.082
+expected_diagnosis:        # 关键结论，必须命中
+  bottleneck_stage: &quot;流量层&quot;
+  root_cause_keywords: [&quot;自然流量下滑&quot;, &quot;推荐权重&quot;]
+expected_actions:          # 建议方向，命中 ≥ 2 条通过
+  - &quot;优化直播间封面与标题&quot;
+must_not_contain:          # 反例，出现即失败
+  - &quot;建议提升转化率&quot;       # 空话，无可执行性
+</code></pre>
+<h3>五维评分卡与发布门槛</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>权重</th>
+<th>评价标准</th>
+<th>打分方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据准确性</td>
+<td><strong>30%</strong></td>
+<td>数字与源数据一致，无幻觉</td>
+<td>全自动（精确比对）</td>
+</tr>
+<tr>
+<td>归因合理性</td>
+<td>25%</td>
+<td>原因符合业务逻辑与专家判断</td>
+<td>LLM-as-judge + 专家抽检</td>
+</tr>
+<tr>
+<td>建议可执行性</td>
+<td>25%</td>
+<td>具体到"谁、做什么、什么时候"，不是空话</td>
+<td>关键词命中 + 专家评</td>
+</tr>
+<tr>
+<td>结构完整性</td>
+<td>10%</td>
+<td>严格遵循输出模板，无缺项</td>
+<td>全自动</td>
+</tr>
+<tr>
+<td>表达清晰度</td>
+<td>10%</td>
+<td>说人话，无废话</td>
+<td>LLM-as-judge</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>发布门槛：加权总分 ≥ 80 分，且数据准确性 ≥ 95 分。</strong></p>
+<p>数据准确性一票否决——<strong>数字错了，其他四个维度得分再高也没有意义</strong>，因为企业根本不会用一份数字有错的报告。</p>
+</blockquote>
+<h3>回归测试：让迭代变成工程行为</h3>
+<p>每次 Skill 修改产生新版本时自动触发：</p>
+<pre><code>新版本提交 → 跑完整 Golden Set → 与旧版本分数对比
+    ├─ 提升   → 允许发布
+    ├─ 持平   → 提示&quot;无明显改进，确认发布？&quot;
+    └─ 下降   → 拦截发布，展示退化的具体 case
+</code></pre>
+<p><strong>这一步让 Skill 的优化从"改了 Prompt，感觉好像好点了"变成可度量的工程过程。</strong></p>
+<h3>上线后：真实使用数据才是终审</h3>
+<table>
+<thead>
+<tr>
+<th>信号</th>
+<th>为什么重要</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>人工修正率</strong></td>
+<td>用户导出报告后改了多少内容——<strong>这是最诚实的质量信号</strong>，改得越多说明越不好用</td>
+</tr>
+<tr>
+<td>采纳率</td>
+<td>建议被真正执行的比例</td>
+</tr>
+<tr>
+<td>复用率</td>
+<td>同一用户 30 天内是否会用第二次</td>
+</tr>
+<tr>
+<td>👍/👎 评分</td>
+<td>直接反馈</td>
+</tr>
+</tbody>
+</table>
+<p>低分 Skill 自动进入 Owner 待办队列，触发优化或归档。</p>
+<h3>总结</h3>
+<blockquote>
+<p>判断标准分三层：<strong>能不能跑（自动）、跑得对不对（自动）、跑得有没有用（专家 + 数据）。</strong><br />
+前两层必须 100% 自动化且是硬门槛，第三层靠评测集把主观判断变成可量化的分数。<br />
+而最终的裁判是线上的人工修正率——<strong>用户改得越少，说明 Skill 越好。</strong></p>
+</blockquote>
+<hr />
+<h2>Q5. 如果 AI 员工分析结果错误，企业为什么应该相信它？</h2>
+<p><strong>因为可信度从来不来自"AI 不会错",而来自"错了能被发现、能被定位、能被修正、并且不会重复犯同一个错"。</strong></p>
+<p><strong>人类分析师也会出错，企业依然信任他们——不是因为他们不出错，而是因为围绕他们建立了一整套机制：数据可以复核、结论可以质疑、错误可以追责、经验可以沉淀。AI 员工需要的是同一套机制，而不是更强的模型。</strong></p>
+<p>我把这套机制拆成五层。</p>
+<h3>第一层：把可能出错的地方压缩到最小</h3>
+<p><strong>大多数 AI 分析出错，错的不是"判断",是"数字"。</strong></p>
+<p>如果把一张 CSV 和一句"分析一下"丢给大模型，它给出的每一个数字都是<strong>生成</strong>的而不是<strong>计算</strong>的——可能对，可能错，而且不可复现。这种情况下企业确实不该相信它。</p>
+<p>所以我的架构做了一件事：<strong>把数值计算从 LLM 手里彻底拿走。</strong></p>
+<pre><code>analysis_flow 分两类步骤：
+  metric 步骤 → pandas 确定性计算 → 结果 100% 正确且可复现
+  llm 步骤   → 只接收计算好的指标，负责解释和建议
+             → Prompt 明确禁止：&quot;你不允许计算任何数字&quot;
+</code></pre>
+<p><strong>结果是：AI 可能"解读错",但绝不会"算错"。</strong> 而"解读"这件事本来就是主观的，人类专家之间也会有分歧——企业对它的容错度天然更高。</p>
+<p>再加一道数字幻觉检测：扫描 LLM 输出的所有数字，只要出现计算结果里没有的数，直接判定幻觉并重试。</p>
+<h3>第二层：让每个结论都能被追溯</h3>
+<p>信任的前提是<strong>可验证</strong>，而不是"你说是就是"。</p>
+<p>报告里的每个数字都携带溯源信息：</p>
+<pre><code>本场进入率 8.2% ▾  ← 点击展开
+    公式：进入直播间人数 / 曝光人数
+    取值：12,460 / 152,000
+    数据来源：uploaded_data.csv 第 2-15 行
+    计算时间：2026-08-10 14:32:07
+</code></pre>
+<p><strong>质疑者可以在 30 秒内自己验算一遍。</strong> 这和人类分析师被质疑时"你把明细发我看看"是完全一样的动作。</p>
+<p>一个不能被验算的结论，无论对错都不该被信任；一个可以被验算的结论，即使偶尔出错也依然可用。</p>
+<h3>第三层：主动承认不确定性</h3>
+<p><strong>一个会说"我不知道"的系统，比一个永远给答案的系统更值得信任。</strong></p>
+<p>系统在这些情况下会主动标注：</p>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>系统行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>必填数据缺失</td>
+<td><strong>拒绝执行</strong>，明确列出缺哪些字段、从哪导出</td>
+</tr>
+<tr>
+<td>样本量不足</td>
+<td>降级执行，报告中标注"因仅有 1 场数据，本次未做同比分析"</td>
+</tr>
+<tr>
+<td>数据存在异常值</td>
+<td>标注"检测到第 7 行转化率为 143%，疑似数据错误，已排除"</td>
+</tr>
+<tr>
+<td>归因置信度低</td>
+<td>输出多个可能原因并标注可能性，而非硬给一个结论</td>
+</tr>
+</tbody>
+</table>
+<p>报告结尾固定有「数据说明与局限」章节。<strong>这个设计的价值在于：它把"AI 的能力边界"显式地交给了使用者，让人来做最后的判断。</strong></p>
+<h3>第四层：错误可以被系统性修正</h3>
+<p>人类分析师犯错，你会跟他复盘，他下次不再犯。AI 员工也必须有这个闭环。</p>
+<pre><code>发现错误
+    ↓
+定位是哪一层出的问题（架构让这件事变得可能）
+    ├─ 数据层  → 输入数据本身有问题 → 补充校验规则
+    ├─ 计算层  → 指标公式口径错了   → 修正 metric_dictionary
+    ├─ 逻辑层  → 分析流程不合理     → 修改 analysis_flow
+    └─ 表达层  → 模型解读有偏差     → 调整 agent_prompt
+    ↓
+把这个错误案例加入 Golden Set
+    ↓
+修正后跑全量回归测试，确认没有引入新问题
+    ↓
+发布新版本（旧版本保留，可回滚）
+</code></pre>
+<p><strong>关键在于：这个错误从此被永久固化在评测集里，以后任何一次修改都会被它检验。</strong> 这是人类分析师做不到的——<strong>AI 员工的错误只需要犯一次。</strong></p>
+<h3>第五层：人在回路，责任明确</h3>
+<p><strong>企业信任的从来不是"AI 本身",而是"AI + 使用它的流程"。</strong></p>
+<ul>
+<li>Skill 发布前必须经过创建者（业务专家）逐项确认</li>
+<li>每个 Skill 有明确的 Owner，出问题有人负责</li>
+<li>高风险决策，AI 只提供分析和建议，<strong>决策权始终在人手里</strong></li>
+<li>完整的执行日志：谁在什么时候用哪个版本的 Skill 分析了什么数据，全程可审计</li>
+</ul>
+<h3>更本质的一点</h3>
+<p><strong>应该被质疑的，其实是"完全信任"这个前提本身。</strong></p>
+<p>企业不需要一个"永远正确所以可以盲信"的 AI，那种东西不存在。企业需要的是一个<strong>能力边界清晰、错误可定位、结论可验证、迭代可度量</strong>的工具。</p>
+<p>就像企业信任 Excel——不是因为 Excel 不会算错（公式写错就会算错），而是因为你能点开单元格看到公式，能验算，能修正。</p>
+<p><strong>我们要做的，是让 AI 员工达到 Excel 那个级别的可信度：透明、可验证、可追责。</strong></p>
+<h3>总结</h3>
+<blockquote>
+<p>可信度不是模型能力，是系统设计。<br />
+<strong>我们不承诺 AI 不出错，我们承诺：数字不会错、结论可验算、错误能定位、同样的错不会犯第二次、责任始终有人担。</strong><br />
+这套机制建立起来之后，企业信任 AI 员工的方式，就和信任一个新入职的分析师是一样的——<strong>先验证，再放权。</strong></p>
+</blockquote>
+<hr />
+<h2>Q6. Skill 和 Workflow、Agent、Prompt 三者有什么区别？</h2>
+<p><strong>这四个词不在同一个维度上，所以"比较"之前要先分层。</strong></p>
+<ul>
+<li><strong>Prompt</strong> 是<strong>指令层</strong>——一次性的交流内容</li>
+<li><strong>Workflow</strong> 是<strong>编排层</strong>——预先定义好的执行路径</li>
+<li><strong>Agent</strong> 是<strong>执行层</strong>——具备工具和自主决策能力的运行时</li>
+<li><strong>Skill</strong> 是<strong>知识层</strong>——被结构化封装的领域能力</li>
+</ul>
+<p><strong>总结：Prompt 是话术，Workflow 是流程，Agent 是执行者，Skill 是知识包。</strong></p>
+<h3>四者对比</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Prompt</th>
+<th>Workflow</th>
+<th>Agent</th>
+<th>Skill</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>本质</strong></td>
+<td>一段指令文本</td>
+<td>预定义的执行图</td>
+<td>有工具、能自主决策的运行时</td>
+<td>结构化封装的领域能力资产</td>
+</tr>
+<tr>
+<td><strong>决策权</strong></td>
+<td>无</td>
+<td>无（路径写死）</td>
+<td>模型自主决定下一步</td>
+<td>无（它是被调用的知识）</td>
+</tr>
+<tr>
+<td><strong>状态</strong></td>
+<td>无状态</td>
+<td>有流程状态</td>
+<td>有会话状态和记忆</td>
+<td>有版本状态</td>
+</tr>
+<tr>
+<td><strong>确定性</strong></td>
+<td>低</td>
+<td><strong>高</strong></td>
+<td><strong>低</strong></td>
+<td>可控（数值确定、解读灵活）</td>
+</tr>
+<tr>
+<td><strong>灵活性</strong></td>
+<td>高</td>
+<td>低</td>
+<td><strong>高</strong></td>
+<td>中（框架固定，解读灵活）</td>
+</tr>
+<tr>
+<td><strong>可复用</strong></td>
+<td>靠复制粘贴</td>
+<td>高（但改起来重）</td>
+<td>中</td>
+<td><strong>高（平台统一分发）</strong></td>
+</tr>
+<tr>
+<td><strong>可管理</strong></td>
+<td>几乎没有</td>
+<td>有（流程引擎管）</td>
+<td>弱</td>
+<td><strong>强（版本/权限/评测/审计）</strong></td>
+</tr>
+<tr>
+<td><strong>典型载体</strong></td>
+<td>一段文字</td>
+<td>DAG / 状态机</td>
+<td>循环 + 工具调用</td>
+<td>JSON Schema</td>
+</tr>
+<tr>
+<td><strong>谁来写</strong></td>
+<td>任何人</td>
+<td>工程师</td>
+<td>工程师</td>
+<td><strong>业务专家（通过自然语言）</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>两两辨析</h3>
+<p><strong>Skill vs Prompt —— 资产 vs 消耗品</strong></p>
+<p>Prompt 是一次性消耗品：说完就没了，散落在个人聊天记录里，每个人写的都不一样。</p>
+<p>Skill 是资产：有版本、有归属、有评测分、有输入输出契约、可被检索和授权。</p>
+<p><strong>注意：Skill 内部包含 Prompt（<code>agent_prompt</code> 字段），但 Skill ≠ Prompt。</strong> 就像"一本书里有文字，但书不等于文字"——书还有目录、章节结构、索引、版次。Skill 的那六个字段，就是围绕 Prompt 建立的结构。</p>
+<p><strong>Skill vs Workflow —— 知识 vs 路径</strong></p>
+<p>Workflow 是"先做 A 再做 B，如果 X 则做 C"——<strong>路径写死，确定但不灵活。</strong> 遇到没预设的情况就卡住。</p>
+<p>Skill 里也有流程（<code>analysis_flow</code>），但两者关键差别在于：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Workflow</th>
+<th>Skill 的 analysis_flow</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>每步做什么</td>
+<td>固定的代码/规则</td>
+<td>分两类：确定性计算 + LLM 推理</td>
+</tr>
+<tr>
+<td>遇到意外情况</td>
+<td>报错或走兜底分支</td>
+<td>LLM 步骤可以理解上下文灵活应对</td>
+</tr>
+<tr>
+<td>谁能修改</td>
+<td>工程师改代码</td>
+<td>业务专家改配置</td>
+</tr>
+<tr>
+<td>目的</td>
+<td>保证流程被执行</td>
+<td>保证经验被复用</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话：Workflow 关心"事情有没有按步骤做完",Skill 关心"判断有没有按专家的思路做对"。</strong></p>
+<p><strong>Skill vs Agent —— 知识包 vs 运行时</strong></p>
+<p><strong>这两个最容易混淆，但其实是最清晰的一组：Agent 是运行时，Skill 是喂给运行时的知识。</strong></p>
+<pre><code>        ┌─────────────────────────────┐
+        │      Agent（运行时）         │
+        │  ┌───────────────────────┐  │
+        │  │  LLM 推理能力          │  │
+        │  │  工具调用能力          │  │
+        │  │  记忆与上下文管理      │  │
+        │  │  自主决策循环          │  │
+        │  └───────────────────────┘  │
+        │            ▲                │
+        │            │ 加载            │
+        │  ┌─────────┴─────────────┐  │
+        │  │  Skill A（直播复盘）   │  │
+        │  │  Skill B（销售诊断）   │  │
+        │  │  Skill C（增长归因）   │  │
+        │  └───────────────────────┘  │
+        └─────────────────────────────┘
+</code></pre>
+<ul>
+<li><strong>同一个 Agent 可以加载多个 Skill</strong> —— 一个"经营分析 AI 员工"可以同时具备复盘、诊断、归因三项能力</li>
+<li><strong>同一个 Skill 可以被不同 Agent 使用</strong> —— 直播复盘 Skill 既可以被对话式 Agent 调用，也可以被定时任务调用</li>
+<li><strong>Skill 让 Agent 从"通用助手"变成"岗位专家"</strong></li>
+</ul>
+<p><strong>类比：Agent 是员工，Skill 是他受过的岗位培训。</strong> 换个员工，培训还在；同一个员工，可以受多项培训。</p>
+<h3>总结</h3>
+<blockquote>
+<p>Prompt 是你交代的一句话，<br />
+Workflow 是你规定的一套流程，<br />
+Agent 是替你干活的那个人，<br />
+<strong>Skill 是这个人受过的岗位培训——它决定了他"懂不懂行"，而不是"能不能干"。</strong></p>
+<p>企业真正稀缺的，从来不是能干活的 Agent，而是懂行的 Skill。</p>
+</blockquote>
+<hr />
+<h2>Q7. 如果让你从零搭建这个平台，你会如何拆解 MVP？</h2>
+<p><strong>我的拆解原则是：MVP 要验证的是"最不确定的那个假设",而不是"做出最多的功能"。</strong></p>
+<p>这个平台最不确定的假设是：</p>
+<blockquote>
+<p><strong>业务人员用自然语言描述的经验，能不能被自动转换成一个真正可执行、且结论可信的 Skill？</strong></p>
+</blockquote>
+<p>所以 MVP 的边界很清楚：<strong>凡是为验证这个假设服务的都做，其余全部砍掉。</strong></p>
+<h3>第一步：识别真正的风险点</h3>
+<table>
+<thead>
+<tr>
+<th>假设</th>
+<th>风险等级</th>
+<th>MVP 要不要验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LLM 能生成结构合理的 Skill</td>
+<td>⚠️ 中</td>
+<td>✅ 必须</td>
+</tr>
+<tr>
+<td><strong>生成的 Skill 能真的执行出正确结果</strong></td>
+<td>🔴 <strong>高</strong></td>
+<td>✅ <strong>核心</strong></td>
+</tr>
+<tr>
+<td><strong>业务人员认可 AI 生成的分析框架</strong></td>
+<td>🔴 <strong>高</strong></td>
+<td>✅ <strong>核心</strong></td>
+</tr>
+<tr>
+<td>用户愿意上传数据</td>
+<td>🟡 低</td>
+<td>用 CSV 上传即可，不做数据源对接</td>
+</tr>
+<tr>
+<td>系统能支撑高并发</td>
+<td>🟢 无</td>
+<td>❌ 完全不做</td>
+</tr>
+<tr>
+<td>Skill 能被多租户隔离管理</td>
+<td>🟢 无</td>
+<td>❌ 完全不做</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论：MVP 的重心在"生成质量"和"执行可信度",不在工程规模。</strong></p>
+<h3>第二步：MVP 范围（做什么 / 不做什么）</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>✅ MVP 做</th>
+<th>❌ MVP 不做</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skill 生成</td>
+<td>自然语言 → 七字段结构化生成 + 四道校验闸</td>
+<td>多轮对话澄清、语音输入、批量生成</td>
+</tr>
+<tr>
+<td>Skill 配置</td>
+<td>可视化展示 + 关键字段可编辑</td>
+<td>拖拽式流程编辑器</td>
+</tr>
+<tr>
+<td>Skill 存储</td>
+<td>SQLite + 版本号</td>
+<td>数据库集群、多租户、权限体系</td>
+</tr>
+<tr>
+<td>数据接入</td>
+<td><strong>CSV 上传 + 字段映射</strong></td>
+<td>数据库直连、API 对接、实时数仓</td>
+</tr>
+<tr>
+<td>Skill 执行</td>
+<td>metric 确定性计算 + llm 归因</td>
+<td>定时调度、批量执行、异步队列</td>
+</tr>
+<tr>
+<td>结果输出</td>
+<td>Markdown 报告 + 溯源展示</td>
+<td>PDF 导出、飞书/钉钉推送、邮件订阅</td>
+</tr>
+<tr>
+<td>质量保障</td>
+<td>Schema 校验 + 幻觉检测 + 1 组 Golden Set</td>
+<td>完整评测平台、专家评审工作流</td>
+</tr>
+<tr>
+<td>预置内容</td>
+<td>3 个预置 Skill + 配套示例数据</td>
+<td>Skill 市场、行业模板库</td>
+</tr>
+<tr>
+<td>用户体系</td>
+<td><strong>无</strong>（单用户）</td>
+<td>登录、权限、组织架构</td>
+</tr>
+</tbody>
+</table>
+<p><strong>砍掉用户体系这件事我想特别说明：</strong> 它看起来是"企业级产品必备",但它对验证核心假设<strong>毫无帮助</strong>，而实现成本不低。这种功能应该在核心假设被验证之后再做。</p>
+<h3>第三步：实施顺序（我会按这个顺序写代码）</h3>
+<p><strong>关键原则：先打通最短路径，再逐层加固。</strong></p>
+<pre><code>【D1-2】定义 SkillSpec Schema  ← 起点，全系统的中心
+  · Pydantic 模型
+  · 手工写 1 个完整的 Skill 样例（不用 AI 生成）
+  · 目的：先把&quot;目标形态&quot;定死，后面所有模块都朝它对齐
+
+【D3-4】打通执行链路（先做执行，后做生成）★
+  · CSV 加载 → input_schema 校验
+  · metric 计算引擎（ast 安全求值）
+  · llm 归因步骤
+  · 报告渲染
+  · 验证：手工写的 Skill + 示例数据 → 能跑出正确报告
+
+【D5-6】打通生成链路
+  · Prompt 设计 + few-shot
+  · LLM structured output
+  · 四道校验闸
+  · 验证：一句话 → 生成的 Skill 能被上一步的执行引擎跑通
+
+【D7-8】前端界面
+  · 生成页 / 配置展示页 / 执行页 / 报告页
+  · Tailwind 保证视觉质量
+
+【D9】质量层
+  · 数字幻觉检测
+  · 溯源信息展示
+  · 1 组 Golden Set + 评分
+
+【D10】收尾
+  · 补齐 3 个预置 Skill
+  · README + 部署 + 演示视频
+</code></pre>
+<p><strong>为什么先做执行、后做生成？</strong></p>
+<p>这是个反直觉但很重要的决定。因为：</p>
+<ol>
+<li><strong>执行链路定义了"什么样的 Skill 才是合格的"</strong>。先把执行引擎写出来，"合格 Skill"的标准就变成了客观的、可运行验证的，而不是主观感觉</li>
+<li><strong>如果先做生成，会陷入"生成了一堆看起来很美但根本跑不通的 Skill"的陷阱</strong>——这恰恰是这类产品最常见的失败方式</li>
+<li>执行链路一旦跑通，生成链路的验收标准就一句话：<strong>生成的 Skill 能不能被执行引擎跑通</strong></li>
+</ol>
+<h3>第四步：MVP 的验收标准</h3>
+<p>不是"功能做完了",而是能回答这三个问题：</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>验收问题</th>
+<th>判定方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>一句话生成的 Skill，<strong>能不能被真实执行</strong>？</td>
+<td>随机 10 次生成，跑通率 ≥ 80%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>执行出的报告，<strong>数字对不对</strong>？</td>
+<td>Golden Set 数据准确性 = 100%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>业务专家看了生成的分析框架，<strong>认不认可</strong>？</td>
+<td>找 2 位有经验的运营看，能不能说出"这个思路是对的"</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第 3 条是最重要也最容易被忽略的。</strong> 前两条是工程问题，做得出来；第 3 条才是产品问题——<strong>如果专家看了说"不对，我不是这么看的",那前面做得再工整都没有意义。</strong></p>
+<h3>第五步：MVP 之后的演进</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>目标</th>
+<th>关键能力</th>
+<th>触发条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>V1 质量可信</strong></td>
+<td>让企业敢用</td>
+<td>完整评测集、回归测试、版本管理、审批流、权限体系</td>
+<td>MVP 验收通过</td>
+</tr>
+<tr>
+<td><strong>V2 数据打通</strong></td>
+<td>降低使用门槛</td>
+<td>数据源直连、定时执行、异常自动预警</td>
+<td>有 ≥ 3 个真实企业在用</td>
+</tr>
+<tr>
+<td><strong>V3 资产运营</strong></td>
+<td>规模化复制</td>
+<td>Skill 市场、行业模板库、跨 Skill 编排</td>
+<td>单企业 Skill 数 ≥ 30</td>
+</tr>
+<tr>
+<td><strong>V4 组织协同</strong></td>
+<td>成为基础设施</td>
+<td>多 Agent 协作、AI 员工绩效看板、OA/IM 集成</td>
+<td>——</td>
+</tr>
+</tbody>
+</table>
+<p><strong>每个阶段都有明确的触发条件，不到条件不启动。</strong> 这是为了避免最常见的失败模式：<strong>核心价值还没被验证，就急着堆功能。</strong></p>
+<h3>总结</h3>
+<blockquote>
+<p>MVP 不是"功能最少的版本",是"验证核心假设所需的最小完整闭环"。</p>
+<p>这个平台的核心假设是"自然语言能变成可执行且可信的 Skill",所以我的 MVP 保留了完整的<strong>生成 → 校验 → 展示 → 执行 → 输出</strong>闭环，但砍掉了用户体系、数据对接、调度等一切与验证无关的东西。</p>
+<p><strong>实施上我会反直觉地先做执行链路再做生成链路</strong>——因为只有执行引擎存在，"什么是合格的 Skill"才有客观标准，生成才不会跑偏。</p>
+</blockquote>
+</div>
+</body>
+</html>

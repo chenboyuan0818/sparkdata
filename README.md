@@ -15,7 +15,10 @@
 | 3 | **可运行 Demo** | [demo/](demo/) · [使用说明](demo/README.md) |
 | 4 | **面试问题回答** | [docs/03_面试问题回答.md](docs/03_面试问题回答.md) |
 
-在线 Demo 地址：_（(https://sparkdata.onrender.com/)）_
+**在线 Demo：https://sparkdata.onrender.com**
+
+> ⏳ 免费实例在无访问时会休眠，首次打开可能需要等待约一分钟唤醒，属正常现象。
+> 无需任何配置即可直接体验完整流程。
 
 ---
 
